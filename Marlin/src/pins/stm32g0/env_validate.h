@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (c) 2020 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2023 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (c) 2011 Camiel Gubbels / Erik van der Zalm
@@ -21,37 +21,6 @@
  */
 #pragma once
 
-/**
- * sd/SdFile.h
- *
- * Arduino SdFat Library
- * Copyright (c) 2009 by William Greiman
- *
- * This file is part of the Arduino Sd2Card Library
- */
-
-#include "SdBaseFile.h"
-
-#include <stdint.h>
-
-/**
- * \class SdFile
- * \brief SdBaseFile with Print.
- */
-class SdFile : public SdBaseFile {
- public:
-  SdFile() {}
-  SdFile(const char *name, uint8_t oflag);
-  #if ARDUINO >= 100
-    size_t write(uint8_t b);
-  #else
-    void write(uint8_t b);
-  #endif
-
-  int16_t write(const void *buf, uint16_t nbyte);
-  void write(const char *str);
-  void write_P(PGM_P str);
-  void writeln_P(PGM_P str);
-};
-
-using MediaFile = SdFile;
+#if NOT_TARGET(STM32G0xx) || NOT_TARGET(STM32G0B1xx)
+  #error "Oops! Select an STM32G0 board in 'Tools > Board.'"
+#endif
