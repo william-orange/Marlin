@@ -65,6 +65,10 @@
   #undef IIC_BL24CXX_EEPROM
 #endif
 
+#if DISABLED(IIC_BL24CXX_EEPROM)
+  #undef OTA_FIRMWARE_UPDATE
+#endif
+
 #ifdef TEENSYDUINO
   #undef max
   #define max(a,b) ((a)>(b)?(a):(b))
@@ -556,7 +560,7 @@
     #define REINIT_NOISY_LCD 1  // Have the LCD re-init on SD insertion
   #endif
 
-#endif
+#endif // HAS_MEDIA
 
 /**
  * Power Supply
@@ -1011,126 +1015,6 @@
   #endif
 
 #endif // Z_MULTI_ENDSTOPS
-
-/**
- * Set ENDSTOPPULLUPS for active endstop switches
- */
-#if ENABLED(ENDSTOPPULLUPS)
-  #if HAS_X_MAX
-    #define ENDSTOPPULLUP_XMAX
-  #endif
-  #if HAS_Y_MAX
-    #define ENDSTOPPULLUP_YMAX
-  #endif
-  #if HAS_Z_MAX
-    #define ENDSTOPPULLUP_ZMAX
-  #endif
-  #if HAS_I_MAX
-    #define ENDSTOPPULLUP_IMAX
-  #endif
-  #if HAS_J_MAX
-    #define ENDSTOPPULLUP_JMAX
-  #endif
-  #if HAS_K_MAX
-    #define ENDSTOPPULLUP_KMAX
-  #endif
-  #if HAS_U_MAX
-    #define ENDSTOPPULLUP_UMAX
-  #endif
-  #if HAS_V_MAX
-    #define ENDSTOPPULLUP_VMAX
-  #endif
-  #if HAS_W_MAX
-    #define ENDSTOPPULLUP_WMAX
-  #endif
-  #if HAS_X_MIN
-    #define ENDSTOPPULLUP_XMIN
-  #endif
-  #if HAS_Y_MIN
-    #define ENDSTOPPULLUP_YMIN
-  #endif
-  #if HAS_Z_MIN_PIN
-    #define ENDSTOPPULLUP_ZMIN
-  #endif
-  #if HAS_I_MIN
-    #define ENDSTOPPULLUP_IMIN
-  #endif
-  #if HAS_J_MIN
-    #define ENDSTOPPULLUP_JMIN
-  #endif
-  #if HAS_K_MIN
-    #define ENDSTOPPULLUP_KMIN
-  #endif
-  #if HAS_U_MIN
-    #define ENDSTOPPULLUP_UMIN
-  #endif
-  #if HAS_V_MIN
-    #define ENDSTOPPULLUP_VMIN
-  #endif
-  #if HAS_W_MIN
-    #define ENDSTOPPULLUP_WMIN
-  #endif
-#endif
-
-/**
- * Set ENDSTOPPULLDOWNS for active endstop switches
- */
-#if ENABLED(ENDSTOPPULLDOWNS)
-  #if HAS_X_MAX
-    #define ENDSTOPPULLDOWN_XMAX
-  #endif
-  #if HAS_Y_MAX
-    #define ENDSTOPPULLDOWN_YMAX
-  #endif
-  #if HAS_Z_MAX
-    #define ENDSTOPPULLDOWN_ZMAX
-  #endif
-  #if HAS_I_MAX
-    #define ENDSTOPPULLDOWN_IMAX
-  #endif
-  #if HAS_J_MAX
-    #define ENDSTOPPULLDOWN_JMAX
-  #endif
-  #if HAS_K_MAX
-    #define ENDSTOPPULLDOWN_KMAX
-  #endif
-  #if HAS_U_MAX
-    #define ENDSTOPPULLDOWN_UMAX
-  #endif
-  #if HAS_V_MAX
-    #define ENDSTOPPULLDOWN_VMAX
-  #endif
-  #if HAS_W_MAX
-    #define ENDSTOPPULLDOWN_WMAX
-  #endif
-  #if HAS_X_MIN
-    #define ENDSTOPPULLDOWN_XMIN
-  #endif
-  #if HAS_Y_MIN
-    #define ENDSTOPPULLDOWN_YMIN
-  #endif
-  #if HAS_Z_MIN_PIN
-    #define ENDSTOPPULLDOWN_ZMIN
-  #endif
-  #if HAS_I_MIN
-    #define ENDSTOPPULLDOWN_IMIN
-  #endif
-  #if HAS_J_MIN
-    #define ENDSTOPPULLDOWN_JMIN
-  #endif
-  #if HAS_K_MIN
-    #define ENDSTOPPULLDOWN_KMIN
-  #endif
-  #if HAS_U_MIN
-    #define ENDSTOPPULLDOWN_UMIN
-  #endif
-  #if HAS_V_MIN
-    #define ENDSTOPPULLDOWN_VMIN
-  #endif
-  #if HAS_W_MIN
-    #define ENDSTOPPULLDOWN_WMIN
-  #endif
-#endif
 
 /**
  * Shorthand for pin tests, used wherever needed
@@ -2207,6 +2091,112 @@
 
 #undef _HAS_STOP
 
+/**
+ * Set ENDSTOPPULLUPS for active endstop switches
+ */
+#if ENABLED(ENDSTOPPULLUPS)
+  #if HAS_X_MIN
+    #define ENDSTOPPULLUP_XMIN
+  #endif
+  #if HAS_X_MAX
+    #define ENDSTOPPULLUP_XMAX
+  #endif
+  #if HAS_Y_MIN
+    #define ENDSTOPPULLUP_YMIN
+  #elif HAS_Y_MAX
+    #define ENDSTOPPULLUP_YMAX
+  #endif
+  #if HAS_Z_MIN_PIN
+    #define ENDSTOPPULLUP_ZMIN
+  #endif
+  #if HAS_Z_MAX
+    #define ENDSTOPPULLUP_ZMAX
+  #endif
+  #if HAS_I_MIN
+    #define ENDSTOPPULLUP_IMIN
+  #elif HAS_I_MAX
+    #define ENDSTOPPULLUP_IMAX
+  #endif
+  #if HAS_J_MIN
+    #define ENDSTOPPULLUP_JMIN
+  #elif HAS_J_MAX
+    #define ENDSTOPPULLUP_JMAX
+  #endif
+  #if HAS_K_MIN
+    #define ENDSTOPPULLUP_KMIN
+  #elif HAS_K_MAX
+    #define ENDSTOPPULLUP_KMAX
+  #endif
+  #if HAS_U_MIN
+    #define ENDSTOPPULLUP_UMIN
+  #elif HAS_U_MAX
+    #define ENDSTOPPULLUP_UMAX
+  #endif
+  #if HAS_V_MIN
+    #define ENDSTOPPULLUP_VMIN
+  #elif HAS_V_MAX
+    #define ENDSTOPPULLUP_VMAX
+  #endif
+  #if HAS_W_MIN
+    #define ENDSTOPPULLUP_WMIN
+  #elif HAS_W_MAX
+    #define ENDSTOPPULLUP_WMAX
+  #endif
+#endif
+
+/**
+ * Set ENDSTOPPULLDOWNS for active endstop switches
+ */
+#if ENABLED(ENDSTOPPULLDOWNS)
+  #if HAS_X_MIN
+    #define ENDSTOPPULLDOWN_XMIN
+  #endif
+  #if HAS_X_MAX
+    #define ENDSTOPPULLDOWN_XMAX
+  #endif
+  #if HAS_Y_MIN
+    #define ENDSTOPPULLDOWN_YMIN
+  #elif HAS_Y_MAX
+    #define ENDSTOPPULLDOWN_YMAX
+  #endif
+  #if HAS_Z_MIN_PIN
+    #define ENDSTOPPULLDOWN_ZMIN
+  #endif
+  #if HAS_Z_MAX
+    #define ENDSTOPPULLDOWN_ZMAX
+  #endif
+  #if HAS_I_MIN
+    #define ENDSTOPPULLDOWN_IMIN
+  #elif HAS_I_MAX
+    #define ENDSTOPPULLDOWN_IMAX
+  #endif
+  #if HAS_J_MIN
+    #define ENDSTOPPULLDOWN_JMIN
+  #elif HAS_J_MAX
+    #define ENDSTOPPULLDOWN_JMAX
+  #endif
+  #if HAS_K_MIN
+    #define ENDSTOPPULLDOWN_KMIN
+  #elif HAS_K_MAX
+    #define ENDSTOPPULLDOWN_KMAX
+  #endif
+  #if HAS_U_MIN
+    #define ENDSTOPPULLDOWN_UMIN
+  #elif HAS_U_MAX
+    #define ENDSTOPPULLDOWN_UMAX
+  #endif
+  #if HAS_V_MIN
+    #define ENDSTOPPULLDOWN_VMIN
+  #elif HAS_V_MAX
+    #define ENDSTOPPULLDOWN_VMAX
+  #endif
+  #if HAS_W_MIN
+    #define ENDSTOPPULLDOWN_WMIN
+  #elif HAS_W_MAX
+    #define ENDSTOPPULLDOWN_WMAX
+  #endif
+#endif
+
 //
 // ADC Temp Sensors (Thermistor or Thermocouple with amplifier ADC interface)
 //
@@ -3160,6 +3150,25 @@
   #endif
   #ifndef PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE
     #define PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE HIGH
+  #endif
+#endif
+
+// Touch Calibration
+#if ANY(HAS_SPI_TFT, HAS_FSMC_TFT, HAS_LTDC_TFT)
+  #ifndef TOUCH_CALIBRATION_X
+    #define TOUCH_CALIBRATION_X 0
+  #endif
+  #ifndef TOUCH_CALIBRATION_Y
+    #define TOUCH_CALIBRATION_Y 0
+  #endif
+  #ifndef TOUCH_OFFSET_X
+    #define TOUCH_OFFSET_X 0
+  #endif
+  #ifndef TOUCH_OFFSET_Y
+    #define TOUCH_OFFSET_Y 0
+  #endif
+  #ifndef TOUCH_ORIENTATION
+    #define TOUCH_ORIENTATION TOUCH_LANDSCAPE
   #endif
 #endif
 
