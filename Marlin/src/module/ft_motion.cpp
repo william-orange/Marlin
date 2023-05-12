@@ -211,9 +211,6 @@ void FxdTiCtrl::loop() {
 
   if (!cfg_mode) return;
 
-  static bool initd = false;
-  if (!initd) { init(); initd = true; }
-
   // Handle block abort with the following sequence:
   // 1. Zero out commands in stepper ISR.
   // 2. Drain the motion buffer, stop processing until they are emptied.
@@ -291,7 +288,7 @@ void FxdTiCtrl::loop() {
   // To be called on init or mode or zeta change.
   void FxdTiCtrl::updateShapingA(const_float_t zeta/*=FTM_SHAPING_ZETA*/, const_float_t vtol/*=FTM_SHAPING_V_TOL*/) {
 
-    const float K = exp( -zeta * PI / sqrt(1.0f - sq(zeta)) ),
+    const float K = exp( -zeta * M_PI / sqrt(1.0f - sq(zeta)) ),
                 K2 = sq(K);
 
     switch (cfg_mode) {
