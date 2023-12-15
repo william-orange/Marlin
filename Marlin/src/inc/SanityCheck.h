@@ -254,6 +254,15 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
   #error "SERIAL_XON_XOFF and SERIAL_STATS_* features not supported on USB-native AVR devices."
 #endif
 
+// Serial DMA is only available for some STM32 MCUs
+#if ENABLED(SERIAL_DMA)
+  #if !HAL_STM32 || NONE(STM32F0xx, STM32F1xx, STM32F2xx, STM32F4xx, STM32F7xx)
+    #error "SERIAL_DMA is only available for some STM32 MCUs and requires HAL/STM32."
+  #elif !defined(HAL_UART_MODULE_ENABLED) || defined(HAL_UART_MODULE_ONLY)
+    #error "SERIAL_DMA requires STM32 platform HAL UART (without HAL_UART_MODULE_ONLY)."
+  #endif
+#endif
+
 /**
  * Multiple Stepper Drivers Per Axis
  */
@@ -1216,7 +1225,7 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
  * Junction deviation is incompatible with kinematic systems.
  */
 #if HAS_JUNCTION_DEVIATION && IS_KINEMATIC
-  #error "CLASSIC_JERK is required for DELTA, SCARA, and POLAR."
+  #error "CLASSIC_JERK is required for the kinematics of DELTA, SCARA, POLAR, etc."
 #endif
 
 /**
@@ -1574,7 +1583,7 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
   #error "Only enable RESTORE_LEVELING_AFTER_G28 or ENABLE_LEVELING_AFTER_G28, but not both."
 #endif
 
-#if HAS_MESH && HAS_CLASSIC_JERK
+#if ALL(HAS_MESH, CLASSIC_JERK)
   static_assert(DEFAULT_ZJERK > 0.1, "Low DEFAULT_ZJERK values are incompatible with mesh-based leveling.");
 #endif
 #if HAS_MESH && DGUS_LCD_UI_IA_CREALITY && GRID_MAX_POINTS > 25
@@ -2753,7 +2762,7 @@ static_assert(COUNT(arm) == LOGICAL_AXES, "AXIS_RELATIVE_MODES must contain " _L
   #endif
 #endif
 
-#if LCD_BACKLIGHT_TIMEOUT_MINS
+#if HAS_BACKLIGHT_TIMEOUT
   #if !HAS_ENCODER_ACTION && DISABLED(HAS_DWIN_E3V2)
     #error "LCD_BACKLIGHT_TIMEOUT_MINS requires an LCD with encoder or keypad."
   #elif ENABLED(NEOPIXEL_BKGD_INDEX_FIRST)
