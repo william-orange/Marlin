@@ -42,11 +42,7 @@
  * version was tagged.
  */
 #ifndef STRING_DISTRIBUTION_DATE
-<<<<<<< HEAD
   #define STRING_DISTRIBUTION_DATE "2024-02-09"
-=======
-  #define STRING_DISTRIBUTION_DATE "2024-02-10"
->>>>>>> parent of 9e879a5b1f ([cron] Bump distribution date (2024-02-11))
 #endif
 
 /**
