@@ -41,11 +41,7 @@
  * here we define this default string as the date where the latest release
  * version was tagged.
  */
-<<<<<<< HEAD
-//#define STRING_DISTRIBUTION_DATE "2024-02-09"
-=======
-//#define STRING_DISTRIBUTION_DATE "2024-02-10"
->>>>>>> parent of 9e879a5b1f ([cron] Bump distribution date (2024-02-11))
+//#define STRING_DISTRIBUTION_DATE "2024-02-28"
 
 /**
  * Defines a generic printer name to be output to the LCD after booting Marlin.
