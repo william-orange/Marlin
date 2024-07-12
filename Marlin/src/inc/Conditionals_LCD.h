@@ -26,6 +26,10 @@
  * Conditionals that need to be set before Configuration_adv.h or pins.h
  */
 
+#ifndef STRING_CONFIG_H_AUTHOR
+  #define STRING_CONFIG_H_AUTHOR "(anonymous)"
+#endif
+
 /**
  * Extruders have some combination of stepper motors and hotends
  * so we separate these concepts into the defines:
@@ -1669,6 +1673,9 @@
 #if SERIAL_PORT == -1 || SERIAL_PORT_2 == -1 || SERIAL_PORT_3 == -1
   #define HAS_USB_SERIAL 1
 #endif
+#ifdef RS485_SERIAL_PORT
+  #define HAS_RS485_SERIAL 1
+#endif
 #if SERIAL_PORT_2 == -2
   #define HAS_ETHERNET 1
 #endif
@@ -1896,6 +1903,10 @@
  */
 #if defined(NEOPIXEL_BKGD_INDEX_FIRST) && !defined(NEOPIXEL_BKGD_INDEX_LAST)
   #define NEOPIXEL_BKGD_INDEX_LAST NEOPIXEL_BKGD_INDEX_FIRST
+#endif
+
+#if LED_POWEROFF_TIMEOUT > 0
+  #define HAS_LED_POWEROFF_TIMEOUT 1
 #endif
 
 #if ALL(SPI_FLASH, HAS_MEDIA, MARLIN_DEV_MODE)
