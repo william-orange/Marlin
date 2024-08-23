@@ -1336,7 +1336,7 @@ void eachMomentUpdate() {
     #endif
   }
 
-  if (!PENDING(ms, next_rts_update_ms)) {
+  if (ELAPSED(ms, next_rts_update_ms)) {
     next_rts_update_ms = ms + DWIN_UPDATE_INTERVAL;
 
     if ((isPrinting() != hmiFlag.printing_flag) && !hmiFlag.home_flag) {
@@ -1811,7 +1811,7 @@ void dwinPrintFinished() {
 // Print was aborted
 void dwinPrintAborted() {
   #ifndef EVENT_GCODE_SD_ABORT
-    if (all_axes_homed()) {
+    if (ExtUI::isMachineHomed()) {
       queue.inject(
         #if ENABLED(NOZZLE_PARK_FEATURE)
           F("G27")
