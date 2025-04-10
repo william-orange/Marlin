@@ -250,7 +250,7 @@
   #if ENABLED(CHAMBER_VENT)
     #define CHAMBER_VENT_SERVO_NR  1  // Index of the vent servo
     #define HIGH_EXCESS_HEAT_LIMIT 5  // How much above target temp to consider there is excess heat in the chamber
-    #define LOW_EXCESS_HEAT_LIMIT 3
+    #define LOW_EXCESS_HEAT_LIMIT  3
     #define MIN_COOLING_SLOPE_TIME_CHAMBER_VENT 20
     #define MIN_COOLING_SLOPE_DEG_CHAMBER_VENT 1.5
   #endif
@@ -458,8 +458,8 @@
       // DEFAULT_Kf and PID_FAN_SCALING_LIN_FACTOR are calculated accordingly.
 
       #define PID_FAN_SCALING_AT_FULL_SPEED 13.0        //=PID_FAN_SCALING_LIN_FACTOR*255+DEFAULT_Kf
-      #define PID_FAN_SCALING_AT_MIN_SPEED 6.0          //=PID_FAN_SCALING_LIN_FACTOR*PID_FAN_SCALING_MIN_SPEED+DEFAULT_Kf
-      #define PID_FAN_SCALING_MIN_SPEED 10.0            // Minimum fan speed at which to enable PID_FAN_SCALING
+      #define PID_FAN_SCALING_AT_MIN_SPEED   6.0        //=PID_FAN_SCALING_LIN_FACTOR*PID_FAN_SCALING_MIN_SPEED+DEFAULT_Kf
+      #define PID_FAN_SCALING_MIN_SPEED     10.0        // Minimum fan speed at which to enable PID_FAN_SCALING
 
       #define DEFAULT_Kf (255.0*PID_FAN_SCALING_AT_MIN_SPEED-PID_FAN_SCALING_AT_FULL_SPEED*PID_FAN_SCALING_MIN_SPEED)/(255.0-PID_FAN_SCALING_MIN_SPEED)
       #define PID_FAN_SCALING_LIN_FACTOR (PID_FAN_SCALING_AT_FULL_SPEED-DEFAULT_Kf)/255.0
@@ -508,7 +508,7 @@
  * High Temperature Thermistor Support
  *
  * Thermistors able to support high temperature tend to have a hard time getting
- * good readings at room and lower temperatures. This means HEATER_X_RAW_LO_TEMP
+ * good readings at room and lower temperatures. This means TEMP_SENSOR_X_RAW_LO_TEMP
  * will probably be caught when the heating element first turns on during the
  * preheating process, which will trigger a MINTEMP error as a safety measure
  * and force stop everything.
@@ -553,9 +553,9 @@
  * Hotend Idle Timeout
  * Prevent filament in the nozzle from charring and causing a critical jam.
  */
-#define HOTEND_IDLE_TIMEOUT
+//#define HOTEND_IDLE_TIMEOUT
 #if ENABLED(HOTEND_IDLE_TIMEOUT)
-  #define HOTEND_IDLE_TIMEOUT_SEC (6*60)    // (seconds) Time without extruder movement to trigger protection
+  #define HOTEND_IDLE_TIMEOUT_SEC (5*60)    // (seconds) Time without extruder movement to trigger protection
   #define HOTEND_IDLE_MIN_TRIGGER   180     // (°C) Minimum temperature to enable hotend protection
   #define HOTEND_IDLE_NOZZLE_TARGET   0     // (°C) Safe temperature for the nozzle after timeout
   #define HOTEND_IDLE_BED_TARGET      0     // (°C) Safe temperature for the bed after timeout
@@ -1404,7 +1404,7 @@
  * vibration and surface artifacts. The algorithm adapts to provide the best possible step smoothing at the
  * lowest stepping frequencies.
  */
-#define ADAPTIVE_STEP_SMOOTHING
+//#define ADAPTIVE_STEP_SMOOTHING
 
 /**
  * Custom Microstepping
@@ -1491,7 +1491,6 @@
 // Change values more rapidly when the encoder is rotated faster
 #define ENCODER_RATE_MULTIPLIER
 #if ENABLED(ENCODER_RATE_MULTIPLIER)
-  //#define ENCODER_5X_STEPS_PER_SEC   15 // (steps/s) Encoder rate for 5x speed
   #define ENCODER_10X_STEPS_PER_SEC   30  // (steps/s) Encoder rate for 10x speed
   #define ENCODER_100X_STEPS_PER_SEC  80  // (steps/s) Encoder rate for 100x speed
 #endif
@@ -1611,7 +1610,7 @@
       //#define BOOT_MARLIN_LOGO_ANIMATED // Animated Marlin logo. Costs ~3260 (or ~940) bytes of flash.
     #endif
     #if ANY(HAS_MARLINUI_U8GLIB, TOUCH_UI_FTDI_EVE, HAS_MARLINUI_HD44780)
-      //#define SHOW_CUSTOM_BOOTSCREEN    // Show the bitmap in Marlin/_Bootscreen.h on startup.
+      #define SHOW_CUSTOM_BOOTSCREEN      // Show the bitmap in Marlin/_Bootscreen.h on startup.
     #endif
   #endif
 
@@ -1736,7 +1735,7 @@
   //#define SD_DETECT_STATE HIGH
 
   //#define SD_IGNORE_AT_STARTUP            // Don't mount the SD card when starting up
-  #define SDCARD_READONLY                 // Read-only SD card (to save over 2K of flash)
+  //#define SDCARD_READONLY                 // Read-only SD card (to save over 2K of flash)
 
   //#define GCODE_REPEAT_MARKERS            // Enable G-code M808 to set repeat markers and do looping
 
@@ -1847,6 +1846,7 @@
 
   //#define LONG_FILENAME_HOST_SUPPORT    // Get the long filename of a file/folder with 'M33 <dosname>' and list long filenames with 'M20 L'
   //#define LONG_FILENAME_WRITE_SUPPORT   // Create / delete files with long filenames via M28, M30, and Binary Transfer Protocol
+  //#define M20_TIMESTAMP_SUPPORT         // Include timestamps by adding the 'T' flag to M20 commands
 
   //#define SCROLL_LONG_FILENAMES         // Scroll long filenames in the SD card menu
 
@@ -2224,13 +2224,6 @@
   // Use a smaller font when labels don't fit buttons
   #define TOUCH_UI_FIT_TEXT
 
-  // Allow language selection from menu at run-time (otherwise use LCD_LANGUAGE)
-  //#define LCD_LANGUAGE_1 en
-  //#define LCD_LANGUAGE_2 fr
-  //#define LCD_LANGUAGE_3 de
-  //#define LCD_LANGUAGE_4 es
-  //#define LCD_LANGUAGE_5 it
-
   // Use a numeric passcode for "Screen lock" keypad.
   // (recommended for smaller displays)
   //#define TOUCH_UI_PASSCODE
@@ -2302,7 +2295,7 @@
  *
  * Warning: Does not respect endstops!
  */
-#define BABYSTEPPING
+//#define BABYSTEPPING
 #if ENABLED(BABYSTEPPING)
   //#define EP_BABYSTEPPING                 // M293/M294 babystepping with EMERGENCY_PARSER support
   //#define BABYSTEP_WITHOUT_HOMING
@@ -2323,11 +2316,15 @@
     #endif
   #endif
 
-  #define BABYSTEP_DISPLAY_TOTAL          // Display total babysteps since last G28
+  //#define BABYSTEP_DISPLAY_TOTAL          // Display total babysteps since last G28
 
   //#define BABYSTEP_ZPROBE_OFFSET          // Combine M851 Z and Babystepping
-  #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
-    //#define BABYSTEP_HOTEND_Z_OFFSET      // For multiple hotends, babystep relative Z offsets
+  //#define BABYSTEP_GLOBAL_Z               // Combine M424 Z and Babystepping
+
+  #if ANY(BABYSTEP_ZPROBE_OFFSET, BABYSTEP_GLOBAL_Z)
+    #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
+      //#define BABYSTEP_HOTEND_Z_OFFSET    // For multiple hotends, babystep relative Z offsets
+    #endif
     //#define BABYSTEP_GFX_OVERLAY          // Enable graphical overlay on Z-offset editor
   #endif
 #endif
@@ -2656,7 +2653,7 @@
  *  - Other output doesn't need to be that speedy.
  * :[0, 2, 4, 8, 16, 32, 64, 128, 256]
  */
-#define TX_BUFFER_SIZE 0
+#define TX_BUFFER_SIZE 32
 
 /**
  * Host Receive Buffer Size
@@ -2783,21 +2780,21 @@
  */
 //#define FWRETRACT
 #if ENABLED(FWRETRACT)
-  #define FWRETRACT_AUTORETRACT           // Override slicer retractions
+  #define FWRETRACT_AUTORETRACT             // Override slicer retractions
   #if ENABLED(FWRETRACT_AUTORETRACT)
-    #define MIN_AUTORETRACT 0.1           // (mm) Don't convert E moves under this length
-    #define MAX_AUTORETRACT 10.0          // (mm) Don't convert E moves over this length
+    #define MIN_AUTORETRACT             0.1 // (mm) Don't convert E moves under this length
+    #define MAX_AUTORETRACT            10.0 // (mm) Don't convert E moves over this length
   #endif
-  #define RETRACT_LENGTH 3                // (mm) Default retract length (positive value)
-  #define RETRACT_LENGTH_SWAP 13          // (mm) Default swap retract length (positive value)
-  #define RETRACT_FEEDRATE 45             // (mm/s) Default feedrate for retracting
-  #define RETRACT_ZRAISE 0                // (mm) Default retract Z-raise
-  #define RETRACT_RECOVER_LENGTH 0        // (mm) Default additional recover length (added to retract length on recover)
-  #define RETRACT_RECOVER_LENGTH_SWAP 0   // (mm) Default additional swap recover length (added to retract length on recover from toolchange)
-  #define RETRACT_RECOVER_FEEDRATE 8      // (mm/s) Default feedrate for recovering from retraction
-  #define RETRACT_RECOVER_FEEDRATE_SWAP 8 // (mm/s) Default feedrate for recovering from swap retraction
+  #define RETRACT_LENGTH                3   // (mm) Default retract length (positive value)
+  #define RETRACT_LENGTH_SWAP          13   // (mm) Default swap retract length (positive value)
+  #define RETRACT_FEEDRATE             45   // (mm/s) Default feedrate for retracting
+  #define RETRACT_ZRAISE                0   // (mm) Default retract Z-raise
+  #define RETRACT_RECOVER_LENGTH        0   // (mm) Default additional recover length (added to retract length on recover)
+  #define RETRACT_RECOVER_LENGTH_SWAP   0   // (mm) Default additional swap recover length (added to retract length on recover from toolchange)
+  #define RETRACT_RECOVER_FEEDRATE      8   // (mm/s) Default feedrate for recovering from retraction
+  #define RETRACT_RECOVER_FEEDRATE_SWAP 8   // (mm/s) Default feedrate for recovering from swap retraction
   #if ENABLED(MIXING_EXTRUDER)
-    //#define RETRACT_SYNC_MIXING         // Retract and restore all mixing steppers simultaneously
+    //#define RETRACT_SYNC_MIXING           // Retract and restore all mixing steppers simultaneously
   #endif
 #endif
 
@@ -3887,6 +3884,14 @@
  */
 //#define CNC_COORDINATE_SYSTEMS
 
+/**
+ * CNC Drilling Cycle - UNDER DEVELOPMENT
+ *
+ * Enables G81 to perform a drilling cycle.
+ * Currently only supports a single cycle, no G-code chaining.
+ */
+//#define CNC_DRILLING_CYCLE
+
 // @section security
 
 /**
@@ -3982,6 +3987,15 @@
 #if ENABLED(FASTER_GCODE_PARSER)
   //#define GCODE_QUOTED_STRINGS  // Support for quoted string parameters
 #endif
+
+/**
+ * Variables
+ *
+ * Define a variable from 100-115 with G-code like '#101=19.6'.
+ * A variable can then be used in a G-code expression like 'G0 X[#101+3]'.
+ * See https://gcodetutor.com/cnc-macro-programming/cnc-variables.html
+ */
+//#define GCODE_VARIABLES
 
 /**
  * Support for MeatPack G-code compression (https://github.com/scottmudge/OctoPrint-MeatPack)

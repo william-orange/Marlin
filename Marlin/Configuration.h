@@ -63,14 +63,14 @@
 // @section info
 
 // Author info of this build printed to the host during boot and M115
-#define STRING_CONFIG_H_AUTHOR "(none, default config)" // Original author or contributor.
+#define STRING_CONFIG_H_AUTHOR "(Matthew Piercey, Bot-In-a-Box Educational Robotics)" // Original author or contributor.
 //#define CUSTOM_VERSION_FILE Version.h // Path from the root directory (no quotes)
 
 // @section machine
 
 // Choose the name from boards.h that matches your setup
 #ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_MELZI_V2
+  #define MOTHERBOARD BOARD_MELZI
 #endif
 
 // @section serial
@@ -96,7 +96,8 @@
  *
  * :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000]
  */
-#define BAUDRATE 115200
+#define BAUDRATE 250000
+
 //#define BAUD_RATE_GCODE     // Enable G-code M575 to set the baud rate
 
 /**
@@ -125,21 +126,21 @@
   //#define RS485_BUS_BUFFER_SIZE 128
 #endif
 
+// Enable CAN bus support and protocol
+//#define CAN_MASTER
+
 // Enable the Bluetooth serial interface on AT90USB devices
 //#define BLUETOOTH
 
-// Choose the name from boards.h that matches your setup
-#ifndef MOTHERBOARD
-  #define MOTHERBOARD BOARD_MELZI_V2
-#endif
-
 // Name displayed in the LCD "Ready" message and Info menu
-//#define CUSTOM_MACHINE_NAME "3D Printer"
+#define CUSTOM_MACHINE_NAME "Wanhao i3"
 //#define CONFIGURABLE_MACHINE_NAME // Add G-code M550 to set/report the machine name
 
 // Printer's unique ID, used by some programs to differentiate between machines.
 // Choose your own or use a service like https://www.uuidgenerator.net/version4
 //#define MACHINE_UUID "00000000-0000-0000-0000-000000000000"
+
+// @section stepper drivers
 
 /**
  * Stepper Drivers
@@ -571,9 +572,7 @@
  *   998 : Dummy Table that ALWAYS reads 25°C or the temperature defined below.
  *   999 : Dummy Table that ALWAYS reads 100°C or the temperature defined below.
  */
-//#define TEMP_SENSOR_0 99
-// anet parts
-#define TEMP_SENSOR_0 1
+#define TEMP_SENSOR_0 99
 #define TEMP_SENSOR_1 0
 #define TEMP_SENSOR_2 0
 #define TEMP_SENSOR_3 0
@@ -581,8 +580,7 @@
 #define TEMP_SENSOR_5 0
 #define TEMP_SENSOR_6 0
 #define TEMP_SENSOR_7 0
-//#define TEMP_SENSOR_BED 99
-#define TEMP_SENSOR_BED 5
+#define TEMP_SENSOR_BED 99
 #define TEMP_SENSOR_PROBE 0
 #define TEMP_SENSOR_CHAMBER 0
 #define TEMP_SENSOR_COOLER 0
@@ -591,8 +589,8 @@
 #define TEMP_SENSOR_REDUNDANT 0
 
 // Dummy thermistor constant temperature readings, for use with 998 and 999
-//#define DUMMY_THERMISTOR_998_VALUE 25
-//#define DUMMY_THERMISTOR_999_VALUE 100
+#define DUMMY_THERMISTOR_998_VALUE  25
+#define DUMMY_THERMISTOR_999_VALUE 100
 
 // Resistor values when using MAX31865 sensors (-5) on TEMP_SENSOR_0 / 1 / 2 / BED
 #if TEMP_SENSOR_IS_MAX_TC(0)
@@ -662,15 +660,15 @@
 // Above this temperature the heater will be switched off.
 // This can protect components from overheating, but NOT from shorts and failures.
 // (Use MINTEMP for thermistor short/failure protection.)
-#define HEATER_0_MAXTEMP 275
-#define HEATER_1_MAXTEMP 275
-#define HEATER_2_MAXTEMP 275
-#define HEATER_3_MAXTEMP 275
-#define HEATER_4_MAXTEMP 275
-#define HEATER_5_MAXTEMP 275
-#define HEATER_6_MAXTEMP 275
-#define HEATER_7_MAXTEMP 275
-#define BED_MAXTEMP      150
+#define HEATER_0_MAXTEMP 260
+#define HEATER_1_MAXTEMP 260
+#define HEATER_2_MAXTEMP 260
+#define HEATER_3_MAXTEMP 260
+#define HEATER_4_MAXTEMP 260
+#define HEATER_5_MAXTEMP 260
+#define HEATER_6_MAXTEMP 260
+#define HEATER_7_MAXTEMP 260
+#define BED_MAXTEMP      100
 #define CHAMBER_MAXTEMP  60
 
 /**
@@ -711,18 +709,15 @@
 
   // Wanhao Duplicator i3
   #if ENABLED(PID_PARAMS_PER_HOTEND)
-    // Specify between 1 and HOTENDS values per array.
-    // If fewer than EXTRUDER values are provided, the last element will be repeated.
+    // Specify up to one value per hotend here, according to your setup.
+    // If there are fewer values, the last one applies to the remaining hotends.
     #define DEFAULT_Kp_LIST {  29.0,  29.0 }
     #define DEFAULT_Ki_LIST {   2.0,   2.0 }
     #define DEFAULT_Kd_LIST {  97.0,  97.0 }
   #else
-    //#define DEFAULT_Kp 34.87
-    //#define DEFAULT_Ki 2.92
-    //#define DEFAULT_Kd 104.26
-    #define DEFAULT_Kp 24.87
-    #define DEFAULT_Ki 2.08
-    #define DEFAULT_Kd 74.37
+    #define DEFAULT_Kp  29.0
+    #define DEFAULT_Ki   2.0
+    #define DEFAULT_Kd  97.0
   #endif
 #else
   #define BANG_MAX 255    // Limit hotend current while in bang-bang mode; 255=full current
@@ -909,7 +904,7 @@
 #if ANY(PIDTEMP, PIDTEMPBED, PIDTEMPCHAMBER)
   //#define PID_OPENLOOP          // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
   //#define SLOW_PWM_HEATERS      // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
-  #define PID_FUNCTIONAL_RANGE 15 // If the temperature difference between the target temperature and the actual temperature
+  #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
                                   // is more than PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
 
   //#define PID_EDIT_MENU         // Add PID editing to the "Advanced Settings" menu. (~700 bytes of flash)
@@ -1237,11 +1232,11 @@
  * Endstop "Hit" State
  * Set to the state (HIGH or LOW) that applies to each endstop.
  */
-#define X_MIN_ENDSTOP_HIT_STATE HIGH
+#define X_MIN_ENDSTOP_HIT_STATE LOW
 #define X_MAX_ENDSTOP_HIT_STATE HIGH
-#define Y_MIN_ENDSTOP_HIT_STATE HIGH
+#define Y_MIN_ENDSTOP_HIT_STATE LOW
 #define Y_MAX_ENDSTOP_HIT_STATE HIGH
-#define Z_MIN_ENDSTOP_HIT_STATE HIGH
+#define Z_MIN_ENDSTOP_HIT_STATE LOW
 #define Z_MAX_ENDSTOP_HIT_STATE HIGH
 #define I_MIN_ENDSTOP_HIT_STATE HIGH
 #define I_MAX_ENDSTOP_HIT_STATE HIGH
@@ -1303,7 +1298,7 @@
  * Override with M92 (when enabled below)
  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 79.5, 79.5, 404.5, 96 }
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 100 }
 
 /**
  * Enable support for M92. Disable to save at least ~530 bytes of flash.
@@ -1315,8 +1310,7 @@
  * Override with M203
  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
  */
-// was 700,700
-#define DEFAULT_MAX_FEEDRATE          { 400, 400, 4, 30 }
+#define DEFAULT_MAX_FEEDRATE          { 700, 700, 100, 10000 }
 
 //#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
 #if ENABLED(LIMITED_MAX_FR_EDITING)
@@ -1329,7 +1323,7 @@
  * Override with M201
  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_MAX_ACCELERATION      { 500, 500, 100, 5000 }
+#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 100, 10000 }
 
 //#define LIMITED_MAX_ACCEL_EDITING     // Limit edit via M201 or LCD to DEFAULT_MAX_ACCELERATION * 2
 #if ENABLED(LIMITED_MAX_ACCEL_EDITING)
@@ -1344,9 +1338,9 @@
  *   M204 R    Retract Acceleration
  *   M204 T    Travel Acceleration
  */
-#define DEFAULT_ACCELERATION          300     // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  1000    // E acceleration for retracts
-#define DEFAULT_TRAVEL_ACCELERATION   1000     // X, Y, Z acceleration for travel (non printing) moves
+#define DEFAULT_ACCELERATION           700    // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
+#define DEFAULT_TRAVEL_ACCELERATION    700    // X, Y, Z acceleration for travel (non printing) moves
 
 /**
  * Default Jerk limits (mm/s)
@@ -1356,11 +1350,11 @@
  * When changing speed and direction, if the difference is less than the
  * value set here, it may happen instantaneously.
  */
-#define CLASSIC_JERK
+//#define CLASSIC_JERK
 #if ENABLED(CLASSIC_JERK)
-  #define DEFAULT_XJERK  5.0
-  #define DEFAULT_YJERK  5.0
-  #define DEFAULT_ZJERK  0.3
+  #define DEFAULT_XJERK  8.0
+  #define DEFAULT_YJERK  8.0
+  #define DEFAULT_ZJERK  0.4
   #define DEFAULT_EJERK  5.0
   //#define DEFAULT_IJERK  0.3
   //#define DEFAULT_JJERK  0.3
@@ -1414,10 +1408,10 @@
  * The probe replaces the Z-MIN endstop and is used for Z homing.
  * (Automatically enables USE_PROBE_FOR_Z_HOMING.)
  */
-#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
+//#define Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN
 
 // Force the use of the probe for Z-axis homing
-#define USE_PROBE_FOR_Z_HOMING
+//#define USE_PROBE_FOR_Z_HOMING
 
 /**
  * Z_MIN_PROBE_PIN
@@ -1452,13 +1446,7 @@
  * A Fix-Mounted Probe either doesn't deploy or needs manual deployment.
  *   (e.g., an inductive probe or a nozzle-based probe-switch.)
  */
-#define FIX_MOUNTED_PROBE
-
-/**
- * Use the nozzle as the probe, with the hotend
- * assembly attached to a sensitive strain gauge.
- */
-//#define STRAIN_GAUGE_PROBE
+//#define FIX_MOUNTED_PROBE
 
 /**
  * Use the nozzle as the probe, as with a conductive
@@ -1669,7 +1657,7 @@
  *     |    [-]    |
  *     O-- FRONT --+
  */
-#define NOZZLE_TO_PROBE_OFFSET { -40, -40, -3.5 }
+#define NOZZLE_TO_PROBE_OFFSET { 10, 10, 0 }
 
 // Enable and set to use a specific tool for probing. Disable to allow any tool.
 #define PROBING_TOOL 0
@@ -1838,7 +1826,7 @@
 //#define DISABLE_E               // Disable the extruder when not stepping
 #define DISABLE_OTHER_EXTRUDERS   // Keep only the active extruder enabled
 
-// @section machine
+// @section motion
 
 // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
 #define INVERT_X_DIR false
@@ -1885,8 +1873,8 @@
 
 // Direction of endstops when homing; 1=MAX, -1=MIN
 // :[-1,1]
-#define X_HOME_DIR 1
-#define Y_HOME_DIR 1
+#define X_HOME_DIR -1
+#define Y_HOME_DIR -1
 #define Z_HOME_DIR -1
 //#define I_HOME_DIR -1
 //#define J_HOME_DIR -1
@@ -1922,7 +1910,7 @@
 #define Z_MIN_POS 0
 #define X_MAX_POS X_BED_SIZE
 #define Y_MAX_POS Y_BED_SIZE
-#define Z_MAX_POS 200
+#define Z_MAX_POS 150
 //#define I_MIN_POS 0
 //#define I_MAX_POS 50
 //#define J_MIN_POS 0
@@ -2135,7 +2123,7 @@
  */
 //#define AUTO_BED_LEVELING_3POINT
 //#define AUTO_BED_LEVELING_LINEAR
-#define AUTO_BED_LEVELING_BILINEAR
+//#define AUTO_BED_LEVELING_BILINEAR
 //#define AUTO_BED_LEVELING_UBL
 //#define MESH_BED_LEVELING
 
@@ -2192,6 +2180,12 @@
   #endif
 
   /**
+   * Add Z offset (M424 Z) that applies to all moves at the planner level.
+   * This Z offset will be automatically set to the middle value with G29.
+   */
+  //#define GLOBAL_MESH_Z_OFFSET
+
+  /**
    * For Cartesian machines, instead of dividing moves on mesh boundaries,
    * split up moves into short segments like a Delta. This follows the
    * contours of the bed more closely than edge-to-edge straight moves.
@@ -2205,10 +2199,11 @@
   //#define G26_MESH_VALIDATION
   #if ENABLED(G26_MESH_VALIDATION)
     #define MESH_TEST_NOZZLE_SIZE    0.4  // (mm) Diameter of primary nozzle.
-    #define MESH_TEST_LAYER_HEIGHT   0.2  // (mm) Default layer height for the G26 Mesh Validation Tool.
-    #define MESH_TEST_HOTEND_TEMP  205    // (°C) Default nozzle temperature for the G26 Mesh Validation Tool.
-    #define MESH_TEST_BED_TEMP      60    // (°C) Default bed temperature for the G26 Mesh Validation Tool.
-    #define G26_XY_FEEDRATE         20    // (mm/s) Feedrate for XY Moves for the G26 Mesh Validation Tool.
+    #define MESH_TEST_LAYER_HEIGHT   0.2  // (mm) Default layer height for G26.
+    #define MESH_TEST_HOTEND_TEMP  205    // (°C) Default nozzle temperature for G26.
+    #define MESH_TEST_BED_TEMP      60    // (°C) Default bed temperature for G26.
+    #define G26_XY_FEEDRATE         20    // (mm/s) Feedrate for G26 XY moves.
+    #define G26_XY_FEEDRATE_TRAVEL 100    // (mm/s) Feedrate for G26 XY travel moves.
     #define G26_RETRACT_MULTIPLIER   1.0  // G26 Q (retraction) used by default between mesh test elements.
   #endif
 
@@ -2253,7 +2248,7 @@
   #define GRID_MAX_POINTS_X 10      // Don't use more than 15 points per axis, implementation limited.
   #define GRID_MAX_POINTS_Y GRID_MAX_POINTS_X
 
-  #define UBL_HILBERT_CURVE       // Use Hilbert distribution for less travel when probing multiple points
+  //#define UBL_HILBERT_CURVE       // Use Hilbert distribution for less travel when probing multiple points
 
   //#define UBL_TILT_ON_MESH_POINTS         // Use nearest mesh points with G29 J for better Z reference
   //#define UBL_TILT_ON_MESH_POINTS_3POINT  // Use nearest mesh points with G29 J0 (3-point)
@@ -2303,7 +2298,7 @@
  * Add a bed leveling sub-menu for ABL or MBL.
  * Include a guided procedure if manual probing is enabled.
  */
-#define LCD_BED_LEVELING
+//#define LCD_BED_LEVELING
 
 #if ENABLED(LCD_BED_LEVELING)
   #define MESH_EDIT_Z_STEP  0.025 // (mm) Step size while manually probing Z axis.
@@ -2312,7 +2307,7 @@
 #endif
 
 // Add a menu item to move between bed corners for manual bed adjustment
-#define LCD_BED_TRAMMING
+//#define LCD_BED_TRAMMING
 
 #if ENABLED(LCD_BED_TRAMMING)
   #define BED_TRAMMING_INSET_LFRB { 30, 30, 30, 30 } // (mm) Left, Front, Right, Back insets
@@ -2425,9 +2420,8 @@
   #define XY_DIAG_BD 282.8427124746
   #define XY_SIDE_AD 200
 
-  // Or, set the default skew factors directly here
-  // to override the above measurements:
-  #define XY_SKEW_FACTOR 0.0
+  // Or, set the XY skew factor directly:
+  //#define XY_SKEW_FACTOR 0.0
 
   //#define SKEW_CORRECTION_FOR_Z
   #if ENABLED(SKEW_CORRECTION_FOR_Z)
@@ -2436,8 +2430,10 @@
     #define YZ_DIAG_AC 282.8427124746
     #define YZ_DIAG_BD 282.8427124746
     #define YZ_SIDE_AD 200
-    #define XZ_SKEW_FACTOR 0.0
-    #define YZ_SKEW_FACTOR 0.0
+
+    // Or, set the Z skew factors directly:
+    //#define XZ_SKEW_FACTOR 0.0
+    //#define YZ_SKEW_FACTOR 0.0
   #endif
 
   // Enable this option for M852 to set skew at runtime
@@ -2459,9 +2455,9 @@
  *   M501 - Read settings from EEPROM. (i.e., Throw away unsaved changes)
  *   M502 - Revert settings to "factory" defaults. (Follow with M500 to init the EEPROM.)
  */
-#define EEPROM_SETTINGS     // Persistent storage with M500 and M501
-#define DISABLE_M503        // Saves ~2700 bytes of flash. Disable for release!
-#define EEPROM_CHITCHAT       // Give feedback on EEPROM commands. Disable to save PROGMEM.
+#define EEPROM_SETTINGS       // Persistent storage with M500 and M501
+//#define DISABLE_M503        // Saves ~2700 bytes of flash. Disable for release!
+#define EEPROM_CHITCHAT       // Give feedback on EEPROM commands. Disable to save flash.
 #define EEPROM_BOOT_SILENT    // Keep M503 quiet and only give errors during first load
 #if ENABLED(EEPROM_SETTINGS)
   //#define EEPROM_AUTO_INIT  // Init EEPROM automatically on any errors.
@@ -2495,16 +2491,17 @@
 // @section temperature
 
 //
-// Preheat Constants - Up to 6 are supported without changes
+// Preheat Constants - Up to 10 are supported without changes
 //
 #define PREHEAT_1_LABEL       "PLA"
 #define PREHEAT_1_TEMP_HOTEND 205
 #define PREHEAT_1_TEMP_BED     60
+#define PREHEAT_1_TEMP_CHAMBER 35
 #define PREHEAT_1_FAN_SPEED     0 // Value from 0 to 255
 
 #define PREHEAT_2_LABEL       "ABS"
 #define PREHEAT_2_TEMP_HOTEND 240
-#define PREHEAT_2_TEMP_BED    110
+#define PREHEAT_2_TEMP_BED    100
 #define PREHEAT_2_TEMP_CHAMBER 35
 #define PREHEAT_2_FAN_SPEED     0 // Value from 0 to 255
 
@@ -2658,6 +2655,9 @@
  * View the current statistics with M78.
  */
 #define PRINTCOUNTER
+#if ENABLED(PRINTCOUNTER)
+  #define PRINTCOUNTER_SAVE_INTERVAL 60 // (minutes) EEPROM save interval during print. A value of 0 will save stats at end of print.
+#endif
 
 // @section security
 
@@ -2700,7 +2700,7 @@
  * SD Card support is disabled by default. If your controller has an SD slot,
  * you must uncomment the following option or it won't work.
  */
-//#define SDSUPPORT
+#define SDSUPPORT
 
 /**
  * SD CARD: ENABLE CRC
@@ -2708,7 +2708,7 @@
  * Use CRC checks and retries on the SD communication.
  */
 #if ENABLED(SDSUPPORT)
-  //#define SD_CHECK_AND_RETRY
+  #define SD_CHECK_AND_RETRY
 #endif
 
 // @section interface
@@ -3092,13 +3092,6 @@
 // LCD for Melzi Card with Graphical LCD
 //
 #define LCD_FOR_MELZI
-//#define ST7920_DELAY_1 DELAY_NS(200) // After CLK LOW
-//#define ST7920_DELAY_2 DELAY_NS(400) // After DAT
-//#define ST7920_DELAY_3 DELAY_NS(200) // After CLK HIGH
-
-#define ST7920_DELAY_1 DELAY_NS(0) // After CLK LOW
-#define ST7920_DELAY_2 DELAY_NS(400) // After DAT
-#define ST7920_DELAY_3 DELAY_NS(0) // After CLK HIGH
 
 //
 // Original Ulticontroller from Ultimaker 2 printer with SSD1309 I2C display and encoder
@@ -3283,13 +3276,16 @@
  *  - Download https://github.com/CrealityOfficial/Ender-3S1/archive/3S1_Plus_Screen.zip
  *  - Copy the downloaded DWIN_SET folder to the SD card.
  *
+ * CREALITY_TOUCH
+ *  - CR-6 OEM touch screen. A DWIN display with touch.
+ *
  * Flash display with DGUS Displays for Marlin:
  *  - Format the SD card to FAT32 with an allocation size of 4kb.
  *  - Download files as specified for your type of display.
  *  - Plug the microSD card into the back of the display.
  *  - Boot the display and wait for the update to complete.
  *
- * :[ 'ORIGIN', 'FYSETC', 'HYPRECY', 'MKS', 'RELOADED', 'IA_CREALITY', 'E3S1PRO' ]
+ * :[ 'ORIGIN', 'FYSETC', 'HYPRECY', 'MKS', 'RELOADED', 'IA_CREALITY', 'E3S1PRO', 'CREALITY_TOUCH' ]
  */
 //#define DGUS_LCD_UI ORIGIN
 #if DGUS_UI_IS(MKS)
@@ -3300,12 +3296,7 @@
 #endif
 
 //
-// CR-6 OEM touch screen. A DWIN display with touch.
-//
-//#define DWIN_CREALITY_TOUCHLCD
-
-//
-// Touch-screen LCD for Malyan M200/M300 printers
+// LCD for Malyan M200/M300 printers
 //
 //#define MALYAN_LCD
 
@@ -3342,6 +3333,12 @@
 // 320x240 Nextion 2.8" serial TFT Resistive Touch Screen NX3224T028
 //
 //#define NEXTION_TFT
+
+//
+// PanelDue touch controller by Escher3D
+// http://escher3d.com/pages/order/products/product2.php
+//
+//#define PANELDUE
 
 //
 // Third-party or vendor-customized controller interfaces.
@@ -3532,8 +3529,8 @@
 //
 //#define TOUCH_SCREEN
 #if ENABLED(TOUCH_SCREEN)
-  #define BUTTON_DELAY_EDIT  50 // (ms) Button repeat delay for edit screens
-  #define BUTTON_DELAY_MENU 250 // (ms) Button repeat delay for menus
+  #define BUTTON_DELAY_EDIT      50 // (ms) Button repeat delay for edit screens
+  #define BUTTON_DELAY_MENU     250 // (ms) Button repeat delay for menus
 
   #if ANY(TFT_CLASSIC_UI, TFT_COLOR_UI)
     //#define NO_BACK_MENU_ITEM     // Don't display a top menu item to go back to the parent menu
