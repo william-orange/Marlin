@@ -114,7 +114,7 @@ void lcd_move_axis(const AxisEnum axis) {
 
 #if ANY(PROBE_OFFSET_WIZARD, X_AXIS_TWIST_COMPENSATION)
 
-  void _goto_manual_move_z(const_float_t scale) {
+  void _goto_manual_move_z(const float scale) {
     ui.manual_move.menu_scale = scale;
     ui.goto_screen([]{ lcd_move_axis(Z_AXIS); });
   }
@@ -129,7 +129,7 @@ void lcd_move_axis(const AxisEnum axis) {
   #define FINE_MANUAL_MOVE 0.025
 #endif
 
-void _goto_manual_move(const_float_t scale) {
+void _goto_manual_move(const float scale) {
   ui.defer_status_screen();
   ui.manual_move.menu_scale = scale;
   ui.goto_screen(ui.manual_move.screen_ptr);
@@ -490,7 +490,7 @@ void menu_move() {
       #if HAS_EXTRUDERS
         EDIT_ITEM(bool, MSG_LINEAR_ADVANCE, &c.linearAdvEna);
         if (c.linearAdvEna || ENABLED(FT_MOTION_NO_MENU_TOGGLE))
-          EDIT_ITEM(float62, MSG_ADVANCE_K, &c.linearAdvK, 0.0f, 1000.0f);
+          EDIT_ITEM(float42_52, MSG_ADVANCE_K, &c.linearAdvK, 0.0f, 10.0f);
       #endif
     }
     END_MENU();
@@ -547,7 +547,7 @@ void menu_move() {
     #if HAS_EXTRUDERS
       EDIT_ITEM(bool, MSG_LINEAR_ADVANCE, &c.linearAdvEna);
       if (c.linearAdvEna || ENABLED(FT_MOTION_NO_MENU_TOGGLE))
-        EDIT_ITEM(float62, MSG_ADVANCE_K, &c.linearAdvK, 0.0f, 1000.0f);
+        EDIT_ITEM(float42_52, MSG_ADVANCE_K, &c.linearAdvK, 0.0f, 10.0f);
     #endif
 
     END_MENU();

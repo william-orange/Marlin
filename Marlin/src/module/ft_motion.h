@@ -176,6 +176,7 @@ class FTMotion {
       static uint8_t block_extruder_axis;  // Cached extruder axis index
     #elif HAS_EXTRUDERS
       static constexpr uint8_t block_extruder_axis = E_AXIS;
+      static bool use_advance_lead;
     #endif
 
     // Shaping variables.
@@ -188,8 +189,8 @@ class FTMotion {
         uint32_t Ni[5];                   // Shaping time index vector.
         uint32_t max_i;                   // Vector length for the selected shaper.
 
-        void set_axis_shaping_N(const ftMotionShaper_t shaper, const_float_t f, const_float_t zeta);    // Sets the gains used by shaping functions.
-        void set_axis_shaping_A(const ftMotionShaper_t shaper, const_float_t zeta, const_float_t vtol); // Sets the indices used by shaping functions.
+        void set_axis_shaping_N(const ftMotionShaper_t shaper, const float f, const float zeta);    // Sets the gains used by shaping functions.
+        void set_axis_shaping_A(const ftMotionShaper_t shaper, const float zeta, const float vtol); // Sets the indices used by shaping functions.
 
       } axis_shaping_t;
 
@@ -209,7 +210,7 @@ class FTMotion {
 
     // Linear advance variables.
     #if HAS_EXTRUDERS
-      static float e_raw_z1, e_advanced_z1;
+      static float prev_traj_e;
     #endif
 
     // Private methods
