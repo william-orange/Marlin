@@ -40,6 +40,7 @@ MMU2 mmu2;
 #include "../../module/temperature.h"
 #include "../../module/planner.h"
 #include "../../module/stepper.h"
+#include "../../MarlinCore.h"
 
 #if ENABLED(HOST_PROMPT_SUPPORT)
   #include "../host_actions.h"
@@ -445,7 +446,7 @@ bool MMU2::rx_ok() {
 void MMU2::check_version(const uint16_t buildnr) {
   if (buildnr < MMU_REQUIRED_FW_BUILDNR) {
     SERIAL_ERROR_MSG("Invalid MMU2 firmware. Version >= " STRINGIFY(MMU_REQUIRED_FW_BUILDNR) " required.");
-    marlin.kill(GET_TEXT_F(MSG_KILL_MMU2_FIRMWARE));
+    kill(GET_TEXT_F(MSG_KILL_MMU2_FIRMWARE));
   }
 }
 
@@ -785,10 +786,10 @@ void MMU2::command(const uint8_t mmu_cmd) {
  * Wait for response from MMU
  */
 bool MMU2::get_response() {
-  while (cmd != MMU_CMD_NONE) marlin.idle();
+  while (cmd != MMU_CMD_NONE) idle();
 
   while (!ready) {
-    marlin.idle();
+    idle();
     if (state != 3) break;
   }
 
@@ -984,7 +985,7 @@ bool MMU2::eject_filament(const uint8_t index, const bool recover) {
     mmu2_attn_buzz();
     TERN_(HOST_PROMPT_SUPPORT, hostui.continue_prompt(GET_TEXT_F(MSG_MMU2_EJECT_RECOVER)));
     TERN_(EXTENSIBLE_UI, ExtUI::onUserConfirmRequired(GET_TEXT_F(MSG_MMU2_EJECT_RECOVER)));
-    TERN_(HAS_RESUME_CONTINUE, marlin.wait_for_user_response());
+    TERN_(HAS_RESUME_CONTINUE, wait_for_user_response());
     mmu2_attn_buzz();
 
     command(MMU_CMD_R0);

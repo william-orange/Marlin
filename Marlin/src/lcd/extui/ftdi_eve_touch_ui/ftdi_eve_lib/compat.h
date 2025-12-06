@@ -27,8 +27,6 @@
     #define FTDI_EXTENDED
   #endif
 
-  #define safe_delay safe_delay
-
 #else // !__MARLIN_FIRMWARE__
 
   #include <Arduino.h>

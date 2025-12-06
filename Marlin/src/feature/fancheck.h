@@ -25,6 +25,7 @@
 
 #if HAS_FANCHECK
 
+#include "../MarlinCore.h"
 #include "../lcd/marlinui.h"
 
 #if ENABLED(AUTO_REPORT_FANS)
@@ -73,11 +74,7 @@ class FanCheck {
     static void check_deferred_error() {
       if (error == TachoError::DETECTED) {
         error = TachoError::REPORTED;
-        #if ENABLED(PARK_HEAD_ON_PAUSE)
-          queue.inject(F("M125"));
-        #else
-          marlin.kill(GET_TEXT_F(MSG_FAN_SPEED_FAULT));
-        #endif
+        TERN(PARK_HEAD_ON_PAUSE, queue.inject(F("M125")), kill(GET_TEXT_F(MSG_FAN_SPEED_FAULT)));
       }
     }
 

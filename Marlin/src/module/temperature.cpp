@@ -410,7 +410,7 @@ PGMSTR(str_t_heating_failed, STR_T_HEATING_FAILED);
 #endif
 
 #if ALL(FAN_SOFT_PWM, USE_CONTROLLER_FAN)
-  uint8_t Temperature::soft_pwm_controllerfan_speed = FAN_OFF_PWM;
+  uint8_t Temperature::soft_pwm_controller_speed = FAN_OFF_PWM;
 #endif
 
 // Init fans according to whether they're native PWM or Software PWM
@@ -681,7 +681,7 @@ volatile bool Temperature::raw_temps_ready = false;
 
   /**
    * Run the minimal required activities during a tuning loop.
-   * TODO: Allow tuning routines to call marlin.idle() for more complete keepalive.
+   * TODO: Allow tuning routines to call idle() for more complete keepalive.
    */
   bool Temperature::tuning_idle(const millis_t &ms) {
 
@@ -720,17 +720,47 @@ void Temperature::factory_reset() {
   //
   #if ENABLED(PIDTEMP)
     #if ENABLED(PID_PARAMS_PER_HOTEND)
-      constexpr float defKP[] = DEFAULT_KP_LIST, defKI[] = DEFAULT_KI_LIST, defKD[] = DEFAULT_KD_LIST;
-      static_assert(WITHIN(COUNT(defKP), 1, HOTENDS), "DEFAULT_KP_LIST must have between 1 and HOTENDS items.");
-      static_assert(WITHIN(COUNT(defKI), 1, HOTENDS), "DEFAULT_KI_LIST must have between 1 and HOTENDS items.");
-      static_assert(WITHIN(COUNT(defKD), 1, HOTENDS), "DEFAULT_KD_LIST must have between 1 and HOTENDS items.");
+      constexpr float defKp[] =
+        #ifdef DEFAULT_Kp_LIST
+          DEFAULT_Kp_LIST
+        #else
+          ARRAY_BY_HOTENDS1(DEFAULT_Kp)
+        #endif
+      , defKi[] =
+        #ifdef DEFAULT_Ki_LIST
+          DEFAULT_Ki_LIST
+        #else
+          ARRAY_BY_HOTENDS1(DEFAULT_Ki)
+        #endif
+      , defKd[] =
+        #ifdef DEFAULT_Kd_LIST
+          DEFAULT_Kd_LIST
+        #else
+          ARRAY_BY_HOTENDS1(DEFAULT_Kd)
+        #endif
+      ;
+      static_assert(WITHIN(COUNT(defKp), 1, HOTENDS), "DEFAULT_Kp_LIST must have between 1 and HOTENDS items.");
+      static_assert(WITHIN(COUNT(defKi), 1, HOTENDS), "DEFAULT_Ki_LIST must have between 1 and HOTENDS items.");
+      static_assert(WITHIN(COUNT(defKd), 1, HOTENDS), "DEFAULT_Kd_LIST must have between 1 and HOTENDS items.");
       #if ENABLED(PID_EXTRUSION_SCALING)
-        constexpr float defKC[] = DEFAULT_KC_LIST;
-        static_assert(WITHIN(COUNT(defKC), 1, HOTENDS), "DEFAULT_KC_LIST must have between 1 and HOTENDS items.");
+        constexpr float defKc[] =
+          #ifdef DEFAULT_Kc_LIST
+            DEFAULT_Kc_LIST
+          #else
+            ARRAY_BY_HOTENDS1(DEFAULT_Kc)
+          #endif
+        ;
+        static_assert(WITHIN(COUNT(defKc), 1, HOTENDS), "DEFAULT_Kc_LIST must have between 1 and HOTENDS items.");
       #endif
       #if ENABLED(PID_FAN_SCALING)
-        constexpr float defKF[] = DEFAULT_KF_LIST;
-        static_assert(WITHIN(COUNT(defKF), 1, HOTENDS), "DEFAULT_KF_LIST must have between 1 and HOTENDS items.");
+        constexpr float defKf[] =
+          #ifdef DEFAULT_Kf_LIST
+            DEFAULT_Kf_LIST
+          #else
+            ARRAY_BY_HOTENDS1(DEFAULT_Kf)
+          #endif
+        ;
+        static_assert(WITHIN(COUNT(defKf), 1, HOTENDS), "DEFAULT_Kf_LIST must have between 1 and HOTENDS items.");
       #endif
       #define PID_DEFAULT(N,E) def##N[E]
     #else
@@ -738,11 +768,11 @@ void Temperature::factory_reset() {
     #endif
     HOTEND_LOOP() {
       temp_hotend[e].pid.set(
-        PID_DEFAULT(KP, ALIM(e, defKP)),
-        PID_DEFAULT(KI, ALIM(e, defKI)),
-        PID_DEFAULT(KD, ALIM(e, defKD))
-        OPTARG(PID_EXTRUSION_SCALING, PID_DEFAULT(KC, ALIM(e, defKC)))
-        OPTARG(PID_FAN_SCALING, PID_DEFAULT(KF, ALIM(e, defKF)))
+        PID_DEFAULT(Kp, ALIM(e, defKp)),
+        PID_DEFAULT(Ki, ALIM(e, defKi)),
+        PID_DEFAULT(Kd, ALIM(e, defKd))
+        OPTARG(PID_EXTRUSION_SCALING, PID_DEFAULT(Kc, ALIM(e, defKc)))
+        OPTARG(PID_FAN_SCALING, PID_DEFAULT(Kf, ALIM(e, defKf)))
       );
     }
   #endif // PIDTEMP
@@ -756,14 +786,14 @@ void Temperature::factory_reset() {
   // Heated Bed PID
   //
   #if ENABLED(PIDTEMPBED)
-    temp_bed.pid.set(DEFAULT_BED_KP, DEFAULT_BED_KI, DEFAULT_BED_KD);
+    temp_bed.pid.set(DEFAULT_bedKp, DEFAULT_bedKi, DEFAULT_bedKd);
   #endif
 
   //
   // Heated Chamber PID
   //
   #if ENABLED(PIDTEMPCHAMBER)
-    temp_chamber.pid.set(DEFAULT_CHAMBER_KP, DEFAULT_CHAMBER_KI, DEFAULT_CHAMBER_KD);
+    temp_chamber.pid.set(DEFAULT_chamberKp, DEFAULT_chamberKi, DEFAULT_chamberKd);
   #endif
 
   // User-Defined Thermistors
@@ -856,7 +886,8 @@ void Temperature::factory_reset() {
     LCD_MESSAGE(MSG_HEATING);
 
     // PID Tuning loop
-    for (marlin.heatup_start(); marlin.is_heating(); ) { // Can be interrupted with M108
+    wait_for_heatup = true;
+    while (wait_for_heatup) { // Can be interrupted with M108
 
       const millis_t ms = millis();
 
@@ -978,14 +1009,14 @@ void Temperature::factory_reset() {
         TERN_(HOST_PROMPT_SUPPORT, hostui.notify(GET_TEXT_F(MSG_PID_AUTOTUNE_DONE)));
 
         #if ANY(PIDTEMPBED, PIDTEMPCHAMBER)
-          FSTR_P const estring = PER_CBH(F("CHAMBER_"), F("BED_"), FPSTR(NUL_STR));
-          say_default_(); SERIAL_ECHOLN(estring, F("KP "), tune_pid.p);
-          say_default_(); SERIAL_ECHOLN(estring, F("KI "), tune_pid.i);
-          say_default_(); SERIAL_ECHOLN(estring, F("KD "), tune_pid.d);
+          FSTR_P const estring = PER_CBH(F("chamber"), F("bed"), FPSTR(NUL_STR));
+          say_default_(); SERIAL_ECHOLN(estring, F("Kp "), tune_pid.p);
+          say_default_(); SERIAL_ECHOLN(estring, F("Ki "), tune_pid.i);
+          say_default_(); SERIAL_ECHOLN(estring, F("Kd "), tune_pid.d);
         #else
-          say_default_(); SERIAL_ECHOLNPGM("KP ", tune_pid.p);
-          say_default_(); SERIAL_ECHOLNPGM("KI ", tune_pid.i);
-          say_default_(); SERIAL_ECHOLNPGM("KD ", tune_pid.d);
+          say_default_(); SERIAL_ECHOLNPGM("Kp ", tune_pid.p);
+          say_default_(); SERIAL_ECHOLNPGM("Ki ", tune_pid.i);
+          say_default_(); SERIAL_ECHOLNPGM("Kd ", tune_pid.d);
         #endif
 
         auto _set_hotend_pid = [](const uint8_t tool, const raw_pid_t &in_pid) {
@@ -1019,7 +1050,7 @@ void Temperature::factory_reset() {
         goto EXIT_M303;
       }
     }
-    marlin.heatup_done();
+    wait_for_heatup = false;
 
     disable_all_heaters();
 
@@ -1056,7 +1087,7 @@ void Temperature::factory_reset() {
   }
 
   Temperature::MPC_autotuner::~MPC_autotuner() {
-    marlin.heatup_done();
+    wait_for_heatup = false;
 
     ui.reset_status();
 
@@ -1081,8 +1112,9 @@ void Temperature::factory_reset() {
     const millis_t test_interval_ms = 10000UL;
     millis_t next_test_ms = curr_time_ms + test_interval_ms;
     ambient_temp = current_temp = degHotend(e);
+    wait_for_heatup = true;
 
-    for (marlin.heatup_start(); ;) { // Can be interrupted with M108
+    for (;;) { // Can be interrupted with M108
       if (housekeeping() == CANCELLED) return CANCELLED;
 
       if (ELAPSED(curr_time_ms, next_test_ms)) {
@@ -1094,7 +1126,7 @@ void Temperature::factory_reset() {
         next_test_ms += test_interval_ms;
       }
     }
-    marlin.heatup_done();
+    wait_for_heatup = false;
 
     #if ENABLED(MPC_AUTOTUNE_DEBUG)
       SERIAL_ECHOLNPGM("MPC_autotuner::measure_ambient_temp() Completed\n=====\n"
@@ -1123,7 +1155,8 @@ void Temperature::factory_reset() {
     temp_samples[0] = temp_samples[1] = temp_samples[2] = current_temp;
     time_fastest = rate_fastest = 0;
 
-    for (marlin.heatup_start(); ;) { // Can be interrupted with M108
+    wait_for_heatup = true;
+    for (;;) { // Can be interrupted with M108
       if (housekeeping() == CANCELLED) return CANCELLED;
 
       if (ELAPSED(curr_time_ms, next_test_time_ms)) {
@@ -1169,7 +1202,7 @@ void Temperature::factory_reset() {
         }
       }
     }
-    marlin.heatup_done();
+    wait_for_heatup = false;
 
     hotend.soft_pwm_amount = 0;
 
@@ -1207,7 +1240,8 @@ void Temperature::factory_reset() {
     #endif
     float last_temp = current_temp;
 
-    for (marlin.heatup_start(); ;) { // Can be interrupted with M108
+    wait_for_heatup = true;
+    for (;;) { // Can be interrupted with M108
       if (housekeeping() == CANCELLED) return CANCELLED;
 
       if (ELAPSED(curr_time_ms, next_test_ms)) {
@@ -1236,11 +1270,11 @@ void Temperature::factory_reset() {
       if (!WITHIN(current_temp, get_sample_3_temp() - 15.0f, hotend.target + 15.0f)) {
         SERIAL_ECHOLNPGM(STR_MPC_TEMPERATURE_ERROR);
         TERN_(EXTENSIBLE_UI, ExtUI::onMPCTuning(ExtUI::mpcresult_t::MPC_TEMP_ERROR));
-        marlin.heatup_done();
+        wait_for_heatup = false;
         return FAILED;
       }
     }
-    marlin.heatup_done();
+    wait_for_heatup = false;
 
     power_fan0 = total_energy_fan0 / MS_TO_SEC_PRECISE(test_duration);
     TERN_(HAS_FAN, power_fan255 = (total_energy_fan255 * 1000) / test_duration);
@@ -1271,7 +1305,7 @@ void Temperature::factory_reset() {
       SERIAL_EOL();
     }
 
-    if (!marlin.is_heating()) {
+    if (!wait_for_heatup) {
       SERIAL_ECHOLNPGM(STR_MPC_AUTOTUNE_INTERRUPTED);
       TERN_(EXTENSIBLE_UI, ExtUI::onMPCTuning(ExtUI::mpcresult_t::MPC_INTERRUPTED));
       return MeasurementState::CANCELLED;
@@ -1556,7 +1590,7 @@ int16_t Temperature::getHeaterPower(const heater_id_t heater_id) {
  * @param  heater_id:  The heater that caused the error
  */
 inline void loud_kill(FSTR_P const lcd_msg, const heater_id_t heater_id) {
-  marlin.setState(MF_KILLED);
+  marlin_state = MarlinState::MF_KILLED;
   thermalManager.disable_all_heaters();
   #if HAS_BEEPER
     for (uint8_t i = 20; i--;) {
@@ -1582,7 +1616,7 @@ inline void loud_kill(FSTR_P const lcd_msg, const heater_id_t heater_id) {
                          _FSTR_E(h,1) _FSTR_E(h,2) _FSTR_E(h,3) _FSTR_E(h,4) \
                          _FSTR_E(h,5) _FSTR_E(h,6) _FSTR_E(h,7) F(STR_E0)
 
-  marlin.kill(lcd_msg, HEATER_FSTR(heater_id));
+  kill(lcd_msg, HEATER_FSTR(heater_id));
 }
 
 /**
@@ -1602,7 +1636,7 @@ void Temperature::_temp_error(
   #endif
   static uint8_t killed = 0;
 
-  if (marlin.isRunning() && killed == TERN(HAS_BOGUS_TEMPERATURE_GRACE_PERIOD, 2, 0)) {
+  if (IsRunning() && killed == TERN(HAS_BOGUS_TEMPERATURE_GRACE_PERIOD, 2, 0)) {
     SERIAL_ERROR_START();
     SERIAL_ECHO(serial_msg);
     SERIAL_ECHOPGM(STR_STOPPED_HEATER);
@@ -2310,25 +2344,25 @@ void Temperature::mintemp_error(const heater_id_t heater_id OPTARG(ERR_INCLUDE_T
  *  - Update the heated bed PID output value
  */
 void Temperature::task() {
-  if (marlin.is(MF_INITIALIZING)) return hal.watchdog_refresh(); // If Marlin isn't started, at least reset the watchdog!
+  if (marlin_state == MarlinState::MF_INITIALIZING) return hal.watchdog_refresh(); // If Marlin isn't started, at least reset the watchdog!
 
   static bool no_reentry = false;  // Prevent recursion
   if (no_reentry) return;
   REMEMBER(mh, no_reentry, true);
 
   #if ENABLED(EMERGENCY_PARSER)
-    if (emergency_parser.killed_by_M112) gcode.M112();
+    if (emergency_parser.killed_by_M112) kill(FPSTR(M112_KILL_STR), nullptr, true);
 
     if (emergency_parser.quickstop_by_M410) {
       emergency_parser.quickstop_by_M410 = false; // quickstop_stepper may call idle so clear this now!
-      gcode.M410();
+      quickstop_stepper();
     }
 
     #if HAS_MEDIA
       if (emergency_parser.sd_abort_by_M524) { // abort SD print immediately
         emergency_parser.sd_abort_by_M524 = false;
         card.flag.abort_sd_printing = true;
-        gcode.M524();
+        gcode.process_subcommands_now(F("M524"));
       }
     #endif
   #endif
@@ -2582,7 +2616,7 @@ void Temperature::task() {
       SERIAL_ERROR_START();
       SERIAL_ECHO(e);
       SERIAL_ECHOLNPGM(STR_INVALID_EXTRUDER_NUM);
-      marlin.kill();
+      kill();
       return 0;
     }
 
@@ -3086,8 +3120,14 @@ void Temperature::init() {
       OUT_WRITE(HEATER_0_PIN, ENABLED(HEATER_0_INVERTING));
     #endif
   #endif
-  #define _INIT_HEATER(N)  TERF(HAS_HEATER_##N, OUT_WRITE)(HEATER_##N##_PIN, ENABLED(HEATER_##N##_INVERTING));
-  REPEAT_1(7, _INIT_HEATER);
+
+  TERF(HAS_HEATER_1, OUT_WRITE)(HEATER_1_PIN, ENABLED(HEATER_1_INVERTING));
+  TERF(HAS_HEATER_2, OUT_WRITE)(HEATER_2_PIN, ENABLED(HEATER_2_INVERTING));
+  TERF(HAS_HEATER_3, OUT_WRITE)(HEATER_3_PIN, ENABLED(HEATER_3_INVERTING));
+  TERF(HAS_HEATER_4, OUT_WRITE)(HEATER_4_PIN, ENABLED(HEATER_4_INVERTING));
+  TERF(HAS_HEATER_5, OUT_WRITE)(HEATER_5_PIN, ENABLED(HEATER_5_INVERTING));
+  TERF(HAS_HEATER_6, OUT_WRITE)(HEATER_6_PIN, ENABLED(HEATER_6_INVERTING));
+  TERF(HAS_HEATER_7, OUT_WRITE)(HEATER_7_PIN, ENABLED(HEATER_7_INVERTING));
 
   #if HAS_HEATED_BED
     #if ENABLED(PELTIER_BED)
@@ -3109,9 +3149,14 @@ void Temperature::init() {
     OUT_WRITE(COOLER_PIN, ENABLED(COOLER_INVERTING));
   #endif
 
-  #define _INIT_FAN(N) TERF(HAS_FAN##N, INIT_FAN_PIN)(FAN##N##_PIN);
-  REPEAT(FAN_COUNT, _INIT_FAN);
-
+  TERF(HAS_FAN0, INIT_FAN_PIN)(FAN0_PIN);
+  TERF(HAS_FAN1, INIT_FAN_PIN)(FAN1_PIN);
+  TERF(HAS_FAN2, INIT_FAN_PIN)(FAN2_PIN);
+  TERF(HAS_FAN3, INIT_FAN_PIN)(FAN3_PIN);
+  TERF(HAS_FAN4, INIT_FAN_PIN)(FAN4_PIN);
+  TERF(HAS_FAN5, INIT_FAN_PIN)(FAN5_PIN);
+  TERF(HAS_FAN6, INIT_FAN_PIN)(FAN6_PIN);
+  TERF(HAS_FAN7, INIT_FAN_PIN)(FAN7_PIN);
   TERF(USE_CONTROLLER_FAN, INIT_FAN_PIN)(CONTROLLER_FAN_PIN);
 
   TERN_(HAS_MAXTC_SW_SPI, max_tc_spi.init());
@@ -3513,7 +3558,7 @@ void Temperature::disable_all_heaters() {
 
   void Temperature::auto_job_check_timer(const bool can_start, const bool can_stop) {
     if (auto_job_over_threshold()) {
-      if (can_start) marlin.startOrResumeJob();
+      if (can_start) startOrResumeJob();
     }
     else if (can_stop) {
       print_job_timer.stop();
@@ -4023,14 +4068,10 @@ void Temperature::isr() {
   #endif
 
   #if ALL(FAN_SOFT_PWM, USE_CONTROLLER_FAN)
-    static SoftPWM soft_pwm_controllerfan;
+    static SoftPWM soft_pwm_controller;
   #endif
 
   #define WRITE_FAN(n, v) WRITE(FAN##n##_PIN, (v) ^ ENABLED(FAN_INVERTING))
-
-  #if ENABLED(FAN_SOFT_PWM)
-    #define _FAN_LOW(N) if (TERN0(HAS_FAN##N, soft_pwm_count_fan[N] <= pwm_count_tmp)) { TERF(HAS_FAN##N, WRITE_FAN)(N, LOW); };
-  #endif
 
   #if DISABLED(SLOW_PWM_HEATERS)
 
@@ -4065,16 +4106,23 @@ void Temperature::isr() {
       #if ENABLED(FAN_SOFT_PWM)
 
         #if ENABLED(USE_CONTROLLER_FAN)
-          WRITE(CONTROLLER_FAN_PIN, soft_pwm_controllerfan.add(pwm_mask, controllerFan.soft_pwm_speed));
+          WRITE(CONTROLLER_FAN_PIN, soft_pwm_controller.add(pwm_mask, controllerFan.soft_pwm_speed));
         #endif
 
-        #define __FAN_PWM(N) do{                                    \
+        #define _FAN_PWM(N) do{                                     \
           uint8_t &spcf = soft_pwm_count_fan[N];                    \
           spcf = (spcf & pwm_mask) + (soft_pwm_amount_fan[N] >> 1); \
           WRITE_FAN(N, spcf > pwm_mask ? HIGH : LOW);               \
         }while(0)
-        #define _FAN_PWM(N) TERF(HAS_FAN##N, __FAN_PWM)(N);
-        REPEAT(FAN_COUNT, _FAN_PWM);
+
+        TERF(HAS_FAN0, _FAN_PWM)(0);
+        TERF(HAS_FAN1, _FAN_PWM)(1);
+        TERF(HAS_FAN2, _FAN_PWM)(2);
+        TERF(HAS_FAN3, _FAN_PWM)(3);
+        TERF(HAS_FAN4, _FAN_PWM)(4);
+        TERF(HAS_FAN5, _FAN_PWM)(5);
+        TERF(HAS_FAN6, _FAN_PWM)(6);
+        TERF(HAS_FAN7, _FAN_PWM)(7);
       #endif
     }
     else {
@@ -4089,9 +4137,32 @@ void Temperature::isr() {
       TERF(HAS_COOLER,         _PWM_LOW)(COOLER, soft_pwm_cooler);
 
       #if ENABLED(FAN_SOFT_PWM)
-        REPEAT(FAN_COUNT, _FAN_LOW);
+        #if HAS_FAN0
+          if (soft_pwm_count_fan[0] <= pwm_count_tmp) WRITE_FAN(0, LOW);
+        #endif
+        #if HAS_FAN1
+          if (soft_pwm_count_fan[1] <= pwm_count_tmp) WRITE_FAN(1, LOW);
+        #endif
+        #if HAS_FAN2
+          if (soft_pwm_count_fan[2] <= pwm_count_tmp) WRITE_FAN(2, LOW);
+        #endif
+        #if HAS_FAN3
+          if (soft_pwm_count_fan[3] <= pwm_count_tmp) WRITE_FAN(3, LOW);
+        #endif
+        #if HAS_FAN4
+          if (soft_pwm_count_fan[4] <= pwm_count_tmp) WRITE_FAN(4, LOW);
+        #endif
+        #if HAS_FAN5
+          if (soft_pwm_count_fan[5] <= pwm_count_tmp) WRITE_FAN(5, LOW);
+        #endif
+        #if HAS_FAN6
+          if (soft_pwm_count_fan[6] <= pwm_count_tmp) WRITE_FAN(6, LOW);
+        #endif
+        #if HAS_FAN7
+          if (soft_pwm_count_fan[7] <= pwm_count_tmp) WRITE_FAN(7, LOW);
+        #endif
         #if ENABLED(USE_CONTROLLER_FAN)
-          if (soft_pwm_controllerfan.count <= pwm_count_tmp) WRITE(CONTROLLER_FAN_PIN, LOW);
+          if (soft_pwm_controller.count <= pwm_count_tmp) WRITE(CONTROLLER_FAN_PIN, LOW);
         #endif
       #endif
     }
@@ -4144,14 +4215,43 @@ void Temperature::isr() {
     #if ENABLED(FAN_SOFT_PWM)
       if (pwm_count_tmp >= 127) {
         pwm_count_tmp = 0;
-        #define __PWM_FAN(N) do{                                \
+        #define _PWM_FAN(N) do{                                 \
           soft_pwm_count_fan[N] = soft_pwm_amount_fan[N] >> 1;  \
           WRITE_FAN(N, soft_pwm_count_fan[N] > 0 ? HIGH : LOW); \
         }while(0)
-        #define _PWM_FAN(N) TERF(HAS_FAN##N, __PWM_FAN)(N);
-        REPEAT(FAN_COUNT, _PWM_FAN);
+        TERF(HAS_FAN0, _PWM_FAN)(0);
+        TERF(HAS_FAN1, _PWM_FAN)(1);
+        TERF(HAS_FAN2, _PWM_FAN)(2);
+        TERF(HAS_FAN3, _FAN_PWM)(3);
+        TERF(HAS_FAN4, _FAN_PWM)(4);
+        TERF(HAS_FAN5, _FAN_PWM)(5);
+        TERF(HAS_FAN6, _FAN_PWM)(6);
+        TERF(HAS_FAN7, _FAN_PWM)(7);
       }
-      REPEAT(FAN_COUNT, _FAN_LOW);
+      #if HAS_FAN0
+        if (soft_pwm_count_fan[0] <= pwm_count_tmp) WRITE_FAN(0, LOW);
+      #endif
+      #if HAS_FAN1
+        if (soft_pwm_count_fan[1] <= pwm_count_tmp) WRITE_FAN(1, LOW);
+      #endif
+      #if HAS_FAN2
+        if (soft_pwm_count_fan[2] <= pwm_count_tmp) WRITE_FAN(2, LOW);
+      #endif
+      #if HAS_FAN3
+        if (soft_pwm_count_fan[3] <= pwm_count_tmp) WRITE_FAN(3, LOW);
+      #endif
+      #if HAS_FAN4
+        if (soft_pwm_count_fan[4] <= pwm_count_tmp) WRITE_FAN(4, LOW);
+      #endif
+      #if HAS_FAN5
+        if (soft_pwm_count_fan[5] <= pwm_count_tmp) WRITE_FAN(5, LOW);
+      #endif
+      #if HAS_FAN6
+        if (soft_pwm_count_fan[6] <= pwm_count_tmp) WRITE_FAN(6, LOW);
+      #endif
+      #if HAS_FAN7
+        if (soft_pwm_count_fan[7] <= pwm_count_tmp) WRITE_FAN(7, LOW);
+      #endif
     #endif // FAN_SOFT_PWM
 
     // SOFT_PWM_SCALE to frequency:
@@ -4535,7 +4635,7 @@ void Temperature::isr() {
   #if ENABLED(AUTO_REPORT_TEMPERATURES)
     AutoReporter<Temperature::AutoReportTemp> Temperature::auto_reporter;
     void Temperature::AutoReportTemp::report() {
-      if (marlin.is_heating()) return;
+      if (wait_for_heatup) return;
       print_heater_states(active_extruder OPTARG(HAS_TEMP_REDUNDANT, ENABLED(AUTO_REPORT_REDUNDANT)));
       SERIAL_EOL();
     }
@@ -4601,7 +4701,8 @@ void Temperature::isr() {
       bool wants_to_cool = false;
       celsius_float_t target_temp = -1.0, old_temp = 9999.0;
       millis_t now, next_temp_ms = 0, cool_check_ms = 0;
-      for (marlin.heatup_start(); marlin.is_heating() && TEMP_CONDITIONS; ) {
+      wait_for_heatup = true;
+      do {
         // Target temperature might be changed during the loop
         if (target_temp != degTargetHotend(target_extruder)) {
           wants_to_cool = isCoolingHotend(target_extruder);
@@ -4626,7 +4727,7 @@ void Temperature::isr() {
           SERIAL_EOL();
         }
 
-        marlin.idle();
+        idle();
         gcode.reset_stepper_timeout(); // Keep steppers powered
 
         const celsius_float_t temp = degHotend(target_extruder);
@@ -4667,17 +4768,16 @@ void Temperature::isr() {
 
         #if G26_CLICK_CAN_CANCEL
           if (click_to_cancel && ui.use_click()) {
-            marlin.heatup_done();
+            wait_for_heatup = false;
             TERN_(HAS_MARLINUI_MENU, ui.quick_feedback());
           }
         #endif
 
-      } // for ... is_heating ...
+      } while (wait_for_heatup && TEMP_CONDITIONS);
 
       // If wait_for_heatup is set, temperature was reached, no cancel
-      // TODO: Use a common function to reset wait_for_heatup and update UI
-      if (marlin.is_heating()) {
-        marlin.heatup_done();
+      if (wait_for_heatup) {
+        wait_for_heatup = false;
         #if ENABLED(DWIN_CREALITY_LCD)
           hmiFlag.heat_flag = 0;
           duration_t elapsed = print_job_timer.duration();  // Print timer
@@ -4694,12 +4794,12 @@ void Temperature::isr() {
       }
 
       return false;
-    } // Temperature::wait_for_hotend
+    }
 
     #if ENABLED(WAIT_FOR_HOTEND)
       void Temperature::wait_for_hotend_heating(const uint8_t target_extruder) {
         if (isHeatingHotend(target_extruder)) {
-          SERIAL_ECHOLNPGM(STR_WAIT_FOR_HOTEND);
+          SERIAL_ECHOLNPGM("Wait for hotend heating...");
           LCD_MESSAGE(MSG_HEATING);
           wait_for_hotend(target_extruder);
           ui.reset_status();
@@ -4795,7 +4895,7 @@ void Temperature::isr() {
       bool wants_to_cool = false;
       celsius_float_t target_temp = -1, old_temp = 9999;
       millis_t now, next_temp_ms = 0, cool_check_ms = 0;
-      marlin.heatup_start();
+      wait_for_heatup = true;
       do {
         // Target temperature might be changed during the loop
         if (target_temp != degTargetBed()) {
@@ -4821,7 +4921,7 @@ void Temperature::isr() {
           SERIAL_EOL();
         }
 
-        marlin.idle();
+        idle();
         gcode.reset_stepper_timeout(); // Keep steppers powered
 
         const celsius_float_t temp = degBed();
@@ -4860,7 +4960,7 @@ void Temperature::isr() {
 
         #if G26_CLICK_CAN_CANCEL
           if (click_to_cancel && ui.use_click()) {
-            marlin.heatup_done();
+            wait_for_heatup = false;
             TERN_(HAS_MARLINUI_MENU, ui.quick_feedback());
           }
         #endif
@@ -4869,12 +4969,11 @@ void Temperature::isr() {
           first_loop = false;
         #endif
 
-      } while (marlin.is_heating() && TEMP_BED_CONDITIONS);
+      } while (wait_for_heatup && TEMP_BED_CONDITIONS);
 
       // If wait_for_heatup is set, temperature was reached, no cancel
-      // TODO: Use a common function to reset wait_for_heatup and update UI
-      if (marlin.is_heating()) {
-        marlin.heatup_done();
+      if (wait_for_heatup) {
+        wait_for_heatup = false;
         ui.reset_status();
         return true;
       }
@@ -4884,7 +4983,7 @@ void Temperature::isr() {
 
     void Temperature::wait_for_bed_heating() {
       if (isHeatingBed()) {
-        SERIAL_ECHOLNPGM(STR_WAIT_FOR_BED);
+        SERIAL_ECHOLNPGM("Wait for bed heating...");
         LCD_MESSAGE(MSG_BED_HEATING);
         wait_for_bed();
         ui.reset_status();
@@ -4915,8 +5014,8 @@ void Temperature::isr() {
 
       float old_temp = 9999;
       millis_t next_temp_ms = 0, next_delta_check_ms = 0;
-      marlin.heatup_start();
-      while (will_wait && marlin.is_heating()) {
+      wait_for_heatup = true;
+      while (will_wait && wait_for_heatup) {
 
         // Print Temp Reading every 10 seconds while heating up.
         millis_t now = millis();
@@ -4926,7 +5025,7 @@ void Temperature::isr() {
           SERIAL_EOL();
         }
 
-        marlin.idle();
+        idle();
         gcode.reset_stepper_timeout(); // Keep steppers powered
 
         // Break after MIN_DELTA_SLOPE_TIME_PROBE seconds if the temperature
@@ -4951,9 +5050,8 @@ void Temperature::isr() {
       }
 
       // If wait_for_heatup is set, temperature was reached, no cancel
-      // TODO: Use a common function to reset wait_for_heatup and update UI
-      if (marlin.is_heating()) {
-        marlin.heatup_done();
+      if (wait_for_heatup) {
+        wait_for_heatup = false;
         ui.reset_status();
         return true;
       }
@@ -4992,7 +5090,7 @@ void Temperature::isr() {
       bool wants_to_cool = false;
       float target_temp = -1, old_temp = 9999;
       millis_t now, next_temp_ms = 0, cool_check_ms = 0;
-      marlin.heatup_start();
+      wait_for_heatup = true;
       do {
         // Target temperature might be changed during the loop
         if (target_temp != degTargetChamber()) {
@@ -5018,7 +5116,7 @@ void Temperature::isr() {
           SERIAL_EOL();
         }
 
-        marlin.idle();
+        idle();
         gcode.reset_stepper_timeout(); // Keep steppers powered
 
         const float temp = degChamber();
@@ -5050,12 +5148,11 @@ void Temperature::isr() {
             old_temp = temp;
           }
         }
-      } while (marlin.is_heating() && TEMP_CHAMBER_CONDITIONS);
+      } while (wait_for_heatup && TEMP_CHAMBER_CONDITIONS);
 
       // If wait_for_heatup is set, temperature was reached, no cancel
-      // TODO: Use a common function to reset wait_for_heatup and update UI
-      if (marlin.is_heating()) {
-        marlin.heatup_done();
+      if (wait_for_heatup) {
+        wait_for_heatup = false;
         ui.reset_status();
         return true;
       }
@@ -5093,7 +5190,7 @@ void Temperature::isr() {
       bool wants_to_cool = false;
       float target_temp = -1, previous_temp = 9999;
       millis_t now, next_temp_ms = 0, next_cooling_check_ms = 0;
-      marlin.heatup_start();
+      wait_for_heatup = true;
       do {
         // Target temperature might be changed during the loop
         if (target_temp != degTargetCooler()) {
@@ -5119,7 +5216,7 @@ void Temperature::isr() {
           SERIAL_EOL();
         }
 
-        marlin.idle();
+        idle();
         gcode.reset_stepper_timeout(); // Keep steppers powered
 
         const celsius_float_t current_temp = degCooler();
@@ -5152,12 +5249,11 @@ void Temperature::isr() {
           }
         }
 
-      } while (marlin.is_heating() && TEMP_COOLER_CONDITIONS);
+      } while (wait_for_heatup && TEMP_COOLER_CONDITIONS);
 
       // If wait_for_heatup is set, temperature was reached, no cancel
-      // TODO: Use a common function to reset wait_for_heatup and update UI
-      if (marlin.is_heating()) {
-        marlin.heatup_done();
+      if (wait_for_heatup) {
+        wait_for_heatup = false;
         ui.reset_status();
         return true;
       }

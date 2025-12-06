@@ -53,6 +53,9 @@ TouchControlType Touch::touch_control_type = NONE;
 #if HAS_DISPLAY_SLEEP
   millis_t Touch::next_sleep_ms; // = 0
 #endif
+#if HAS_RESUME_CONTINUE
+  extern bool wait_for_user;
+#endif
 
 void Touch::init() {
   TERN_(TOUCH_SCREEN_CALIBRATION, touch_calibration.calibration_reset());
@@ -88,10 +91,10 @@ void Touch::idle() {
 
     #if HAS_RESUME_CONTINUE
       // UI is waiting for a click anywhere?
-      if (marlin.wait_for_user) {
+      if (wait_for_user) {
         touch_control_type = CLICK;
         ui.lcd_clicked = true;
-        if (ui.external_control) marlin.user_resume();
+        if (ui.external_control) wait_for_user = false;
         return;
       }
     #endif
@@ -200,7 +203,7 @@ void Touch::touch(touch_control_t * const control) {
 
     // Specifically, Click to Continue
     #if HAS_RESUME_CONTINUE
-      case RESUME_CONTINUE: marlin.user_resume(); break;
+      case RESUME_CONTINUE: extern bool wait_for_user; wait_for_user = false; break;
     #endif
 
     // Page Up button

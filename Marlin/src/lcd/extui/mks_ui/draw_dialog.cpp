@@ -112,7 +112,7 @@ static void btn_ok_event_cb(lv_obj_t *btn, lv_event_t event) {
     #endif
   }
   else if (DIALOG_IS(TYPE_STOP)) {
-    marlin.heatup_done();
+    wait_for_heatup = false;
     stop_print_time();
     lv_clear_dialog();
     lv_draw_ready_print();
@@ -129,7 +129,7 @@ static void btn_ok_event_cb(lv_obj_t *btn, lv_event_t event) {
   }
   #if ENABLED(ADVANCED_PAUSE_FEATURE)
     else if (DIALOG_IS(PAUSE_MESSAGE_WAITING, PAUSE_MESSAGE_INSERT, PAUSE_MESSAGE_HEAT))
-      marlin.user_resume();
+      wait_for_user = false;
     else if (DIALOG_IS(PAUSE_MESSAGE_OPTION))
       pause_menu_response = PAUSE_RESPONSE_EXTRUDE_MORE;
     else if (DIALOG_IS(PAUSE_MESSAGE_RESUME)) {

@@ -28,6 +28,8 @@
 #include "../queue.h"
 #include "../../libs/hex_print.h"
 
+#include "../../MarlinCore.h" // for idle()
+
 /**
  * M100: Free Memory Watcher
  *
@@ -176,7 +178,7 @@ inline int32_t count_test_bytes(const char * const start_free_memory) {
       SERIAL_EOL();
       start_free_memory += 16;
       serial_delay(25);
-      marlin.idle();
+      idle();
     }
   }
 
@@ -207,12 +209,12 @@ inline int check_for_free_memory_corruption(FSTR_P const title) {
   if (end_free_memory < start_free_memory)  {
     SERIAL_ECHOPGM(" end_free_memory < Heap ");
     //SET_INPUT_PULLUP(63);           // if the developer has a switch wired up to their controller board
-    //safe_delay(5);       // this code can be enabled to pause the display as soon as the
-    //while ( READ(63))               // malfunction is detected. It is currently defaulting to a switch
-    //  marlin.idle();                // being on pin-63 which is unassigend and available on most controller
-    //safe_delay(20);      // boards.
+    //safe_delay(5);                  // this code can be enabled to pause the display as soon as the
+    //while ( READ(63))               // malfunction is detected.   It is currently defaulting to a switch
+    //  idle();                       // being on pin-63 which is unassigend and available on most controller
+    //safe_delay(20);                 // boards.
     //while ( !READ(63))
-    //  marlin.idle();
+    //  idle();
     serial_delay(20);
     #if ENABLED(M100_FREE_MEMORY_DUMPER)
       M100_dump_routine(F("   Memory corruption detected with end_free_memory<Heap\n"), (const char*)0x1B80, 0x0680);
