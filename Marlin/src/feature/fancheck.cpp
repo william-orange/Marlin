@@ -42,18 +42,30 @@ bool FanCheck::enabled;
 
 void FanCheck::init() {
   #define _TACHINIT(N) TERN(E##N##_FAN_TACHO_PULLUP, SET_INPUT_PULLUP, TERN(E##N##_FAN_TACHO_PULLDOWN, SET_INPUT_PULLDOWN, SET_INPUT))(E##N##_FAN_TACHO_PIN)
-  #define _EN_TACHINIT(N) TERF(HAS_E##N##_FAN_TACHO, _TACHINIT)(N);
-  REPEAT(8, _EN_TACHINIT);
+  TERF(HAS_E0_FAN_TACHO, _TACHINIT)(0);
+  TERF(HAS_E1_FAN_TACHO, _TACHINIT)(1);
+  TERF(HAS_E2_FAN_TACHO, _TACHINIT)(2);
+  TERF(HAS_E3_FAN_TACHO, _TACHINIT)(3);
+  TERF(HAS_E4_FAN_TACHO, _TACHINIT)(4);
+  TERF(HAS_E5_FAN_TACHO, _TACHINIT)(5);
+  TERF(HAS_E6_FAN_TACHO, _TACHINIT)(6);
+  TERF(HAS_E7_FAN_TACHO, _TACHINIT)(7);
 }
 
 void FanCheck::update_tachometers() {
   bool status;
 
-  #define __TACHO_GET_STATUS(N) case N: status = READ(E##N##_FAN_TACHO_PIN); break;
-  #define _TACHO_GET_STATUS(N) TERF(HAS_E##N##_FAN_TACHO, __TACHO_GET_STATUS)(N)
+  #define _TACHO_CASE(N) case N: status = READ(E##N##_FAN_TACHO_PIN); break;
   for (uint8_t f = 0; f < TACHO_COUNT; ++f) {
     switch (f) {
-      REPEAT(8, _TACHO_GET_STATUS)
+      TERF(HAS_E0_FAN_TACHO, _TACHO_CASE)(0)
+      TERF(HAS_E1_FAN_TACHO, _TACHO_CASE)(1)
+      TERF(HAS_E2_FAN_TACHO, _TACHO_CASE)(2)
+      TERF(HAS_E3_FAN_TACHO, _TACHO_CASE)(3)
+      TERF(HAS_E4_FAN_TACHO, _TACHO_CASE)(4)
+      TERF(HAS_E5_FAN_TACHO, _TACHO_CASE)(5)
+      TERF(HAS_E6_FAN_TACHO, _TACHO_CASE)(6)
+      TERF(HAS_E7_FAN_TACHO, _TACHO_CASE)(7)
       default: continue;
     }
 
@@ -71,8 +83,14 @@ void FanCheck::compute_speed(uint16_t elapsedTime) {
   uint8_t fan_error_msk = 0;
   for (uint8_t f = 0; f < TACHO_COUNT; ++f) {
     switch (f) {
-      #define _EN_COMPUTE_FAN_CASE(N) TERN_(HAS_E##N##_FAN_TACHO, case N:)
-      REPEAT(8, _EN_COMPUTE_FAN_CASE)
+      TERN_(HAS_E0_FAN_TACHO, case 0:)
+      TERN_(HAS_E1_FAN_TACHO, case 1:)
+      TERN_(HAS_E2_FAN_TACHO, case 2:)
+      TERN_(HAS_E3_FAN_TACHO, case 3:)
+      TERN_(HAS_E4_FAN_TACHO, case 4:)
+      TERN_(HAS_E5_FAN_TACHO, case 5:)
+      TERN_(HAS_E6_FAN_TACHO, case 6:)
+      TERN_(HAS_E7_FAN_TACHO, case 7:)
         // Compute fan speed
         rps[f] = edge_counter[f] * float(250) / elapsedTime;
         edge_counter[f] = 0;
@@ -93,7 +111,7 @@ void FanCheck::compute_speed(uint16_t elapsedTime) {
   // Drop the error when all fans are ok
   if (!fan_error_msk && error == TachoError::REPORTED) error = TachoError::FIXED;
 
-  if (error == TachoError::FIXED && !marlin.printJobOngoing() && !marlin.printingIsPaused()) {
+  if (error == TachoError::FIXED && !printJobOngoing() && !printingIsPaused()) {
     error = TachoError::NONE; // if the issue has been fixed while the printer is idle, reenable immediately
     ui.reset_alert_level();
   }
@@ -106,17 +124,17 @@ void FanCheck::compute_speed(uint16_t elapsedTime) {
 }
 
 void FanCheck::report_speed_error(uint8_t fan) {
-  if (marlin.printJobOngoing()) {
+  if (printJobOngoing()) {
     if (error == TachoError::NONE) {
       if (thermalManager.degTargetHotend(fan) != 0) {
-        marlin.kill(GET_TEXT_F(MSG_FAN_SPEED_FAULT));
+        kill(GET_TEXT_F(MSG_FAN_SPEED_FAULT));
         error = TachoError::REPORTED;
       }
       else
         error = TachoError::DETECTED;   // Plans error for next processed command
     }
   }
-  else if (!marlin.printingIsPaused()) {
+  else if (!printingIsPaused()) {
     thermalManager.setTargetHotend(0, fan); // Always disable heating
     if (error == TachoError::NONE) error = TachoError::REPORTED;
   }
@@ -129,8 +147,14 @@ void FanCheck::print_fan_states() {
   for (uint8_t s = 0; s < 2; ++s) {
     for (uint8_t f = 0; f < TACHO_COUNT; ++f) {
       switch (f) {
-        #define _EN_PRINT_FAN_CASE(N) TERN_(HAS_E##N##_FAN_TACHO, case N:)
-        REPEAT(8, _EN_PRINT_FAN_CASE)
+        TERN_(HAS_E0_FAN_TACHO, case 0:)
+        TERN_(HAS_E1_FAN_TACHO, case 1:)
+        TERN_(HAS_E2_FAN_TACHO, case 2:)
+        TERN_(HAS_E3_FAN_TACHO, case 3:)
+        TERN_(HAS_E4_FAN_TACHO, case 4:)
+        TERN_(HAS_E5_FAN_TACHO, case 5:)
+        TERN_(HAS_E6_FAN_TACHO, case 6:)
+        TERN_(HAS_E7_FAN_TACHO, case 7:)
           SERIAL_ECHOPGM("E", f);
           if (s == 0)
             SERIAL_ECHOPGM(":", 60 * rps[f], " RPM ");

@@ -28,6 +28,7 @@
 #include "../../module/motion.h"
 #include "../../lcd/marlinui.h"
 #include "../../libs/buzzer.h"
+#include "../../MarlinCore.h"
 
 /**
  * M206: Set Additional Homing Offset (X Y Z). SCARA aliases T=X, P=Y

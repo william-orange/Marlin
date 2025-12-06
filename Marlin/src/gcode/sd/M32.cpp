@@ -28,6 +28,8 @@
 #include "../../sd/cardreader.h"
 #include "../../module/planner.h" // for synchronize()
 
+#include "../../MarlinCore.h" // for startOrResumeJob
+
 /**
  * M32: Select file and start SD Print
  *
@@ -50,7 +52,7 @@ void GcodeSuite::M32() {
     card.startOrResumeFilePrinting();
 
     // Procedure calls count as normal print time.
-    if (!call_procedure) marlin.startOrResumeJob();
+    if (!call_procedure) startOrResumeJob();
   }
 }
 

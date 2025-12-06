@@ -28,6 +28,7 @@
 
 Nozzle nozzle;
 
+#include "../MarlinCore.h"
 #include "../module/motion.h"
 
 #if NOZZLE_CLEAN_MIN_TEMP > 20

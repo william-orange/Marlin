@@ -79,7 +79,7 @@ void gotoPopup(const popupDrawFunc_t fnDraw, const popupClickFunc_t fnClick/*=nu
 }
 
 void hmiPopup() {
-  if (!marlin.wait_for_user) {
+  if (!wait_for_user) {
     if (popupClick) popupClick();
     return;
   }

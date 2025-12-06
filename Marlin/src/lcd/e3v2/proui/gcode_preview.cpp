@@ -191,7 +191,7 @@ bool Preview::hasPreview() {
 void Preview::drawFromSD() {
   if (!hasPreview()) {
     hmiFlag.select_flag = 1;
-    marlin.user_resume();
+    wait_for_user = false;
     return;
   }
 

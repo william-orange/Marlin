@@ -25,6 +25,7 @@
 #if HAS_MULTI_LANGUAGE
 
 #include "../gcode.h"
+#include "../../MarlinCore.h"
 #include "../../lcd/marlinui.h"
 
 /**

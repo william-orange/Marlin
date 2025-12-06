@@ -28,6 +28,7 @@
 
 unified_bed_leveling bedlevel;
 
+#include "../../../MarlinCore.h"
 #include "../../../gcode/gcode.h"
 
 #include "../../../module/settings.h"
@@ -220,7 +221,7 @@ void unified_bed_leveling::display_map(const uint8_t map_type) {
       if (human) SERIAL_CHAR(is_current ? ']' : ' ');
 
       SERIAL_FLUSHTX();
-      marlin.idle_no_sleep();
+      idle_no_sleep();
     }
     if (!lcd) SERIAL_EOL();
 

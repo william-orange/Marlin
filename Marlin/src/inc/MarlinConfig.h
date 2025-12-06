@@ -52,7 +52,6 @@
   #include "../core/mstring.h"
   #include "../core/serial.h"
   #include "../core/endianness.h"
-  #include "../MarlinCore.h"
 
 #endif
 

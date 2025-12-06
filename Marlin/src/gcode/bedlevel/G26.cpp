@@ -105,6 +105,7 @@
 #include "../gcode.h"
 #include "../../feature/bedlevel/bedlevel.h"
 
+#include "../../MarlinCore.h"
 #include "../../module/planner.h"
 #include "../../module/motion.h"
 #include "../../module/tool_change.h"

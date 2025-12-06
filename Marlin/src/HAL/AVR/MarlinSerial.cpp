@@ -41,6 +41,7 @@
 #if !defined(USBCON) && (defined(UBRRH) || defined(UBRR0H) || defined(UBRR1H) || defined(UBRR2H) || defined(UBRR3H))
 
 #include "MarlinSerial.h"
+#include "../../MarlinCore.h"
 
 #if ENABLED(DIRECT_STEPPING)
   #include "../../feature/direct_stepping.h"
