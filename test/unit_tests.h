@@ -21,10 +21,6 @@
  */
 #pragma once
 
-/**
- * unit_tests.h - Unit Tests class used by cpp files in the Marlin/tests/ folder.
- */
-
 #include <list>
 #include <string>
 #include <unity.h>

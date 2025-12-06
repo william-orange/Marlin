@@ -612,7 +612,7 @@ void ChironTFT::panelAction(uint8_t req) {
       break;
 
     case 12:   // A12 Kill printer
-      marlin.kill();  // from MarlinCore.h
+      kill();  // from marlincore.h
       break;
 
     case 13:   // A13 Select file

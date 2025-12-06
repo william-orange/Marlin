@@ -150,7 +150,7 @@ void MarlinUI::move_axis_screen() {
 
   TERN_(TOUCH_SCREEN, touch.clear());
 
-  const bool busy = marlin.printingIsActive();
+  const bool busy = printingIsActive();
 
   // Babysteps during printing? Select babystep for Z probe offset
   #if ENABLED(BABYSTEP_ZPROBE_OFFSET)
