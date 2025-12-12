@@ -74,11 +74,11 @@
 #endif
 
 #if HAS_DWIN_E3V2
-  #include "lcd/e3v2/common/encoder.h"
+  #include "lcd/dwin/common/encoder.h"
   #if ENABLED(DWIN_CREALITY_LCD)
-    #include "lcd/e3v2/creality/dwin.h"
+    #include "lcd/dwin/creality/dwin.h"
   #elif ENABLED(DWIN_CREALITY_LCD_JYERSUI)
-    #include "lcd/e3v2/jyersui/dwin.h"
+    #include "lcd/dwin/jyersui/dwin.h"
   #elif ENABLED(SOVOL_SV06_RTS)
     #include "lcd/sovol_rts/sovol_rts.h"
   #endif
@@ -715,7 +715,7 @@ inline void manage_inactivity(const bool no_stepper_sleep=false) {
     // handle delayed move timeout
     if (delayed_move_time && ELAPSED(ms, delayed_move_time) && IsRunning()) {
       // travel moves have been received so enact them
-      delayed_move_time = 0xFFFFFFFFUL; // force moves to be done
+      delayed_move_time = UINT32_MAX; // force moves to be done
       destination = current_position;
       prepare_line_to_destination();
       planner.synchronize();
