@@ -102,7 +102,7 @@ typedef uint16_t hal_timer_t;
 #define STEPPER_TIMER_RATE          (HAL_TIMER_RATE / STEPPER_TIMER_PRESCALE)   // frequency of stepper timer
 #define STEPPER_TIMER_TICKS_PER_US  ((STEPPER_TIMER_RATE) / 1000000)            // stepper timer ticks per µs
 
-#define PULSE_TIMER_RATE            STEPPER_TIMER_RATE   // frequency of pulse timer
+#define PULSE_TIMER_RATE            STEPPER_TIMER_RATE                              // (Hz) Frequency of Pulse Timer
 #define PULSE_TIMER_PRESCALE        STEPPER_TIMER_PRESCALE
 #define PULSE_TIMER_TICKS_PER_US    STEPPER_TIMER_TICKS_PER_US
 

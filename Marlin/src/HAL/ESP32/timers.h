@@ -61,6 +61,9 @@ typedef uint64_t hal_timer_t;
 
 #define STEP_TIMER_MIN_INTERVAL   8 // minimum time in µs between stepper interrupts
 
+#define PULSE_TIMER_RATE            STEPPER_TIMER_RATE                              // (Hz) Frequency of Pulse Timer
+#define PULSE_TIMER_PRESCALE        STEPPER_TIMER_PRESCALE
+
 #define TONE_TIMER_PRESCALE    1000 // Arbitrary value, no idea what i'm doing here
 
 #define TEMP_TIMER_PRESCALE    1000 // prescaler for setting Temp timer, 72Khz
