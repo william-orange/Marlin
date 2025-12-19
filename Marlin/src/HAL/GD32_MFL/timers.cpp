@@ -69,6 +69,10 @@
   #endif
 #endif
 
+#ifndef HAL_TIMER_RATE
+  #define HAL_TIMER_RATE  GetStepperTimerClkFreq()
+#endif
+
 #ifndef STEP_TIMER
   #define STEP_TIMER    MF_TIMER_STEP
 #endif
@@ -117,10 +121,9 @@ void HAL_timer_start(const uint8_t timer_number, const uint32_t frequency) {
 
   if (is_step) {
     timer.setPrescaler(STEPPER_TIMER_PRESCALE);
-    timer.setRolloverValue(
-      _MIN(HAL_TIMER_TYPE_MAX, hal_timer_t((HAL_TIMER_RATE) / (STEPPER_TIMER_PRESCALE))),
-      TimerFormat::TICK
-    );
+    timer.setRolloverValue(_MIN(static_cast<hal_timer_t>(HAL_TIMER_TYPE_MAX),
+                               (HAL_TIMER_RATE) / (STEPPER_TIMER_PRESCALE)),
+                               TimerFormat::TICK);
     is_step_timer_initialized = true;
   }
   else {

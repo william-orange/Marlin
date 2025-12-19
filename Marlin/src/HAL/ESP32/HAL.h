@@ -76,6 +76,7 @@
 // Types
 // ------------------------
 
+typedef double isr_float_t;   // FPU ops are used for single-precision, so use double for ISRs.
 typedef int16_t pin_t;
 
 typedef struct pwm_pin {

@@ -26,7 +26,6 @@
 
 #include "../gcode.h"
 #include "../../sd/cardreader.h"
-#include "../../lcd/marlinui.h"
 
 /**
  * M34: Media Sorting
@@ -34,7 +33,7 @@
  * Set Media Sorting Options
  *
  * Parameters:
- *   S<int>  Sorting Order:
+ *   S<inr>  Sorting Order:
  *     S    Default sorting (i.e., SDSORT_REVERSE)
  *     S-1  Reverse alpha sorting
  *     S0   FID Order (not always newest)
@@ -47,16 +46,11 @@
  *     F1   Folders after files
  */
 void GcodeSuite::M34() {
-  if (parser.seen('S'))
-    card.setSortOn(SortFlag(parser.ushortval('S', TERN(SDSORT_REVERSE, AS_REV, AS_FWD))));
-
+  if (parser.seen('S')) card.setSortOn(SortFlag(parser.ushortval('S', TERN(SDSORT_REVERSE, AS_REV, AS_FWD))));
   if (parser.seenval('F')) {
     const int v = parser.value_long();
     card.setSortFolders(v < 0 ? -1 : v > 0 ? 1 : 0);
   }
-
-  ui.refresh();
-
   //if (parser.seen('R')) card.setSortReverse(parser.value_bool());
 }
 

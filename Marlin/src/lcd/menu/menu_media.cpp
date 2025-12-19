@@ -101,10 +101,7 @@ class MenuItem_sdfolder : public MenuItem_sdbase {
     }
 };
 
-//
 // Shortcut menu items to go directly to inserted — not necessarily mounted — drives
-//
-
 void menu_file_selector_sd() {
   if (!card.isSDCardSelected()) {
     card.release();
@@ -114,6 +111,7 @@ void menu_file_selector_sd() {
   ui.goto_screen(menu_file_selector);
 }
 
+// Shortcut menu items to go directly to inserted — not necessarily mounted — drives
 void menu_file_selector_usb() {
   if (!card.isFlashDriveSelected()) {
     card.release();
@@ -123,6 +121,7 @@ void menu_file_selector_usb() {
   ui.goto_screen(menu_file_selector);
 }
 
+// Shortcut menu items to go directly to inserted — not necessarily mounted — drives
 void menu_file_selector() {
   ui.encoder_direction_menus();
 

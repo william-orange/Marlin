@@ -22,15 +22,9 @@
 #pragma once
 
 /**
- * mmu2_power.h
+ * strlen_cx.h
  */
 
-namespace MMU3 {
-
-void power_on();
-
-void power_off();
-
-void power_reset();
-
-} // MMU3
+constexpr inline int strlen_constexpr(const char *str) {
+  return *str ? 1 + strlen_constexpr(str + 1) : 0;
+}
