@@ -26,8 +26,10 @@
 #include "stepper.h"      // For stepper motion and direction
 
 #include "ft_motion/trajectory_trapezoidal.h"
-#include "ft_motion/trajectory_poly5.h"
-#include "ft_motion/trajectory_poly6.h"
+#if ENABLED(FTM_POLYS)
+  #include "ft_motion/trajectory_poly5.h"
+  #include "ft_motion/trajectory_poly6.h"
+#endif
 #if ENABLED(FTM_RESONANCE_TEST)
   #include "ft_motion/resonance_generator.h"
 #endif
@@ -42,7 +44,7 @@
 
 #define FTM_VERSION   2   // Change version when hosts need to know
 
-#if HAS_X_AXIS && (HAS_Z_AXIS || HAS_EXTRUDERS)
+#if ENABLED(FTM_DYNAMIC_FREQ)
   #define HAS_DYNAMIC_FREQ 1
   #if HAS_Z_AXIS
     #define HAS_DYNAMIC_FREQ_MM 1
@@ -96,19 +98,63 @@ typedef struct FTConfig {
     static constexpr TrajectoryType trajectory_type = TrajectoryType::TRAPEZOIDAL;
   #endif
 
+  static void prep_for_shaper_change();
+  static void update_shaping_params();
+
   #if HAS_STANDARD_MOTION
     bool setActive(const bool a) {
       if (a == active) return false;
       stepper.ftMotion_syncPosition();
+      prep_for_shaper_change();
       active = a;
+      update_shaping_params();
       return true;
     }
   #endif
 
+  bool setAxisSync(const bool ena) {
+    if (ena == axis_sync_enabled) return false;
+    prep_for_shaper_change();
+    axis_sync_enabled = ena;
+    update_shaping_params();
+    return true;
+  }
+
   #if HAS_FTM_SHAPING
 
-    constexpr bool goodZeta(const float z) { return WITHIN(z, 0.01f, 1.0f); }
-    constexpr bool goodVtol(const float v) { return WITHIN(v, 0.00f, 1.0f); }
+    bool setShaper(const AxisEnum a, const ftMotionShaper_t s) {
+      if (s == shaper[a]) return false;
+      prep_for_shaper_change();
+      shaper[a] = s;
+      update_shaping_params();
+      return true;
+    }
+
+    constexpr bool goodZeta(const float z) { return WITHIN(z, 0.00f, ftm_max_dampening); }
+
+    bool setZeta(const AxisEnum a, float z) {
+      if (z == zeta[a]) return false;
+      LIMIT(z, 0.00f, ftm_max_dampening);
+      prep_for_shaper_change();
+      zeta[a] = z;
+      update_shaping_params();
+      return true;
+    }
+
+    #if HAS_FTM_EI_SHAPING
+
+      constexpr bool goodVtol(const float v) { return WITHIN(v, 0.00f, 1.0f); }
+
+      bool setVtol(const AxisEnum a, float v) {
+        if (v == vtol[a]) return false;
+        LIMIT(v, 0.00f, 1.0f);
+        prep_for_shaper_change();
+        vtol[a] = v;
+        update_shaping_params();
+        return true;
+      }
+
+    #endif
 
     #if HAS_DYNAMIC_FREQ
 
@@ -119,10 +165,11 @@ typedef struct FTConfig {
           TERN_(HAS_DYNAMIC_FREQ_MM, case dynFreqMode_Z_BASED:)
           TERN_(HAS_DYNAMIC_FREQ_G, case dynFreqMode_MASS_BASED:)
           case dynFreqMode_DISABLED:
-            planner.synchronize();
+            prep_for_shaper_change();
             dynFreqMode = dynFreqMode_t(m);
             break;
         }
+        update_shaping_params();
         return 1;
       }
 
@@ -131,11 +178,29 @@ typedef struct FTConfig {
              || TERN0(HAS_DYNAMIC_FREQ_G,  dynFreqMode == dynFreqMode_MASS_BASED));
       }
 
+      bool setDynFreqK(const AxisEnum a, const float k) {
+        if (!modeUsesDynFreq()) return false;
+        if (k == dynFreqK[a]) return false;
+        prep_for_shaper_change();
+        dynFreqK[a] = k;
+        update_shaping_params();
+        return true;
+      }
+
     #endif // HAS_DYNAMIC_FREQ
 
   #endif // HAS_FTM_SHAPING
 
   constexpr bool goodBaseFreq(const float f) { return WITHIN(f, FTM_MIN_SHAPE_FREQ, (FTM_FS) / 2); }
+
+  bool setBaseFreq(const AxisEnum a, float f) {
+    if (f == baseFreq[a]) return false;
+    LIMIT(f, FTM_MIN_SHAPE_FREQ, (FTM_FS) / 2);
+    prep_for_shaper_change();
+    baseFreq[a] = f;
+    update_shaping_params();
+    return true;
+  }
 
   void set_defaults() {
     #if HAS_STANDARD_MOTION
@@ -162,6 +227,8 @@ typedef struct FTConfig {
     #endif // HAS_FTM_SHAPING
 
     TERN_(FTM_POLYS, poly6_acceleration_overshoot = FTM_POLY6_ACCELERATION_OVERSHOOT);
+
+    update_shaping_params();
   }
 
 } ft_config_t;
@@ -184,8 +251,6 @@ class FTMotion {
     static void set_defaults() {
       cfg.set_defaults();
 
-      TERN_(HAS_FTM_SHAPING, update_shaping_params());
-
       #if ENABLED(FTM_SMOOTHING)
         #define _RESET_SMOOTH(A) (void)set_smoothing_time(_AXIS(A), FTM_SMOOTHING_TIME_##A);
         CARTES_MAP(_RESET_SMOOTH);
@@ -206,11 +271,6 @@ class FTMotion {
     #if ENABLED(FTM_RESONANCE_TEST)
       static void start_resonance_test();                 // Start a resonance test with given parameters
       static ResonanceGenerator rtg;                      // Resonance trajectory generator instance
-    #endif
-
-    #if HAS_FTM_SHAPING
-      // Refresh gains and indices used by shaping functions.
-      static void update_shaping_params();
     #endif
 
     #if ENABLED(FTM_SMOOTHING)
@@ -247,29 +307,20 @@ class FTMotion {
       return cfg.active ? axis_move_dir[axis] : stepper.last_direction_bits[axis];
     }
 
+    // A frame of the stepping plan
     static stepping_t stepping;
-    FORCE_INLINE static bool stepper_plan_is_empty() {
-      return stepper_plan_head == stepper_plan_tail;
-    }
-    FORCE_INLINE static bool stepper_plan_is_full() {
-      return ((stepper_plan_head + 1) & FTM_BUFFER_MASK) == stepper_plan_tail;
-    }
-    FORCE_INLINE static uint32_t stepper_plan_count() {
-      return (stepper_plan_head - stepper_plan_tail) & FTM_BUFFER_MASK;
-    }
-    // Enqueue a plan
-    FORCE_INLINE static void enqueue_stepper_plan(const stepper_plan_t& d) {
-      stepper_plan_buff[stepper_plan_head] = d;
-      stepper_plan_head = (stepper_plan_head + 1u) & FTM_BUFFER_MASK;
-    }
-    // Dequeue a plan.
-    // Zero-copy consume; caller must use it before next dequeue if they keep a ref.
-    // Done like this to avoid double copy.
-    // e.g do: stepper_plan_t data = dequeue_stepper_plan(); this is ok
-    FORCE_INLINE static stepper_plan_t& dequeue_stepper_plan() {
-      const uint32_t i = stepper_plan_tail;
-      stepper_plan_tail = (i + 1u) & FTM_BUFFER_MASK;
-      return stepper_plan_buff[i];
+
+    // Add a single set of coordinates in the stepping plan
+    FORCE_INLINE static void stepping_enqueue(const xyze_float_t traj_coords) {
+      #define _TOSTEPS_q16(A, B) int64_t(traj_coords.A * planner.settings.axis_steps_per_mm[B] * (1ULL << 16))
+      XYZEval<int64_t> next_steps_q48_16 = LOGICAL_AXIS_ARRAY(
+        _TOSTEPS_q16(e, block_extruder_axis),
+        _TOSTEPS_q16(x, X_AXIS), _TOSTEPS_q16(y, Y_AXIS), _TOSTEPS_q16(z, Z_AXIS),
+        _TOSTEPS_q16(i, I_AXIS), _TOSTEPS_q16(j, J_AXIS), _TOSTEPS_q16(k, K_AXIS),
+        _TOSTEPS_q16(u, U_AXIS), _TOSTEPS_q16(v, V_AXIS), _TOSTEPS_q16(w, W_AXIS)
+      );
+      #undef _TOSTEPS_q16
+      stepping.enqueue(next_steps_q48_16);
     }
 
   private:
@@ -278,6 +329,7 @@ class FTMotion {
                         endPos_prevBlock; // (mm) End position of previous block
     static xyze_float_t ratio;            // (ratio) Axis move ratio of block
     static float tau;                     // (s) Time since start of block
+    static bool fastForwardUntilMotion;   // Fast forward time if there is no motion
 
     // Trajectory generators
     static TrapezoidalTrajectoryGenerator trapezoidalGenerator;
@@ -314,15 +366,27 @@ class FTMotion {
       static float prev_traj_e;
     #endif
 
+    #if HAS_FTM_SHAPING
+      // Refresh gains and indices used by shaping functions.
+      friend void ft_config_t::update_shaping_params();
+      static void update_shaping_params();
+    #endif
+
+    // Synchronize and reset motion prior to parameter changes
+    friend void ft_config_t::prep_for_shaper_change();
+    static void prep_for_shaper_change() {
+      planner.synchronize();
+      reset();
+    }
+
     // Buffers
     static void discard_planner_block_protected();
     static uint32_t calc_runout_samples();
     static void plan_runout_block();
     static void fill_stepper_plan_buffer();
     static xyze_float_t calc_traj_point(const float dist);
-    static stepper_plan_t calc_stepper_plan(xyze_float_t delta);
     static bool plan_next_block();
-    static void ensure_float_precision();
+    static void ensure_float_precision() IF_DISABLED(HAS_EXTRUDERS, {});
 
 }; // class FTMotion
 

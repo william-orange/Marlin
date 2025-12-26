@@ -30,19 +30,22 @@ FORCE_INLINE constexpr uint32_t a_times_b_shift_16(const uint32_t a, const uint3
   const uint32_t hi = a >> 16, lo = a & 0x0000FFFF;
   return (hi * b) + ((lo * b) >> 16);
 }
-#define FTM_NEVER uint32_t(UINT16_MAX)                               // Reserved number to indicate "no ticks in this frame" (FRAME_TICKS_FP+1 would work too)
-constexpr uint32_t FRAME_TICKS = STEPPER_TIMER_RATE / FTM_FS;        // Timer ticks per frame (by default, 1kHz)
-constexpr uint32_t TICKS_BITS = __builtin_clzl(FRAME_TICKS + 1UL);   // Bits to represent the max value (duration of a frame, +1 one for FTM_NEVER).
-constexpr uint32_t FTM_Q_INT = 32u - TICKS_BITS;                     // Bits remaining
-                                                                     // "clz" counts leading zeroes.
-constexpr uint32_t FTM_Q = 16u - FTM_Q_INT;                          // uint16 interval fractional bits.
-                                                                     // Intervals buffer has fixed point numbers with the point on this position
 
-static_assert(FRAME_TICKS < FTM_NEVER, "(STEPPER_TIMER_RATE / FTM_FS) must be < " STRINGIFY(FTM_NEVER) " to fit 16-bit fixed-point numbers.");
-static_assert(FRAME_TICKS !=  2000 || FTM_Q_INT == 11, "FTM_Q_INT should be 11");
-static_assert(FRAME_TICKS !=  2000 || FTM_Q == 5,      "FTM_Q should be 5");
-static_assert(FRAME_TICKS != 25000 || FTM_Q_INT == 15, "FTM_Q_INT should be 15");
-static_assert(FRAME_TICKS != 25000 || FTM_Q == 1,      "FTM_Q should be 1");
+// Count leading zeroes of v when stored in a 32 bit uint, equivalent to `32 - ceil(log2(v))`
+constexpr int CLZ32(const uint32_t v, const int c=0) {
+  return v ? (TEST32(v, 31)) ? c : CLZ32(v << 1, c + 1) : 32;
+}
+#define FTM_NEVER uint32_t(UINT16_MAX)                        // Reserved number to indicate "no ticks in this frame" (FRAME_TICKS_FP+1 would work too)
+constexpr uint32_t FRAME_TICKS = STEPPER_TIMER_RATE / FTM_FS; // Timer ticks per frame
+constexpr uint32_t FTM_Q_INT = 32u - CLZ32(FRAME_TICKS + 1U); // Bits to represent the integer part of the max value (duration of a frame, +1 one for FTM_NEVER).
+constexpr uint32_t FTM_Q = 16u - FTM_Q_INT;                   // uint16 interval fractional bits.
+                                                              // Intervals buffer has fixed point numbers with the point on this position
+
+static_assert(FRAME_TICKS < FTM_NEVER, "(STEPPER_TIMER_RATE / FTM_FS) (" STRINGIFY(STEPPER_TIMER_RATE) " / " STRINGIFY(FTM_FS) ") must be < " STRINGIFY(FTM_NEVER) " to fit 16-bit fixed-point numbers.");
+
+// Sanity check
+static_assert(POW(2, 16 - FTM_Q) > FRAME_TICKS, "FRAME_TICKS in Q format should fit in a uint16");
+static_assert(POW(2, 16 - FTM_Q - 1) <= FRAME_TICKS, "A smaller FTM_Q would still alow a FRAME_TICKS in Q format to fit in a uint16");
 
 // The _FP and _fp suffixes mean the number is in fixed point format with the point at the FTM_Q position.
 // See: https://en.wikipedia.org/wiki/Fixed-point_arithmetic
@@ -54,17 +57,19 @@ constexpr uint32_t FRAME_TICKS_FP = FRAME_TICKS << FTM_Q; // Ticks in a frame in
 
 typedef struct stepper_plan {
   AxisBits dir_bits;
-  xyze_ulong_t advance_dividend_q0_32{0};
-  void reset() { advance_dividend_q0_32.reset(); }
+  xyze_uint_t first_interval_fp;
+  xyze_uint_t interval_fp;
 } stepper_plan_t;
 
 // Stepping plan handles steps for a whole frame (trajectory point delta)
 typedef struct Stepping {
-  stepper_plan_t stepper_plan;
-  xyze_ulong_t advance_dividend_reciprocal{0}; // Note this 32 bit reciprocal underestimates quotients by at most one.
-  xyze_ulong_t delta_error_q32{ LOGICAL_AXIS_LIST_1(_BV32(31)) };
+
+  //
+  // ISR part
+  //
+
+  AxisBits dir_bits;
   AxisBits step_bits;
-  uint32_t bresenham_iterations_pending;
 
   xyze_ulong_t axis_interval_fp{ LOGICAL_AXIS_LIST_1(FTM_NEVER) };
   xyze_ulong_t ticks_left_per_axis_fp{ LOGICAL_AXIS_LIST_1(FTM_NEVER) };
@@ -148,6 +153,8 @@ typedef struct Stepping {
   //
   // Buffering part
   //
+
+  #define FTM_BUFFER_MASK (FTM_BUFFER_SIZE - 1u)
 
   stepper_plan_t stepper_plan_buff[FTM_BUFFER_SIZE];
   uint32_t stepper_plan_tail = 0, stepper_plan_head = 0;
