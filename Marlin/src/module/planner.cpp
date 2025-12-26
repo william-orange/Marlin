@@ -2635,7 +2635,7 @@ bool Planner::_populate_block(
 
                 // Fast acos(-t) approximation (max. error +-0.033rad = 1.89°)
                 // Based on MinMax polynomial published by W. Randolph Franklin, see
-                // https://wrfranklin.org/Research/Short_Notes/arcsin/onlyelem.html
+                // https://wrf.ecse.rpi.edu/Research/Short_Notes/arcsin/onlyelem.html
                 //  acos( t) = pi / 2 - asin(x)
                 //  acos(-t) = pi - acos(t) ... pi / 2 + asin(x)
 

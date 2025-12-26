@@ -65,7 +65,7 @@ namespace Anycubic {
 
   // Only uncomment the tunes you are using to save memory
   // This will help you write tunes!
-  // https://virtualpiano.online/
+  // https://www.apronus.com/music/flashpiano.htm
 
   const uint16_t SOS[] = {
     250,

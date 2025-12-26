@@ -100,9 +100,9 @@
  * M240: Trigger a camera by...
  *
  *  - CHDK                  : Emulate a Canon RC-1 with a configurable ON duration.
- *                            https://youtube.be/UqZ8Um5MZEA
+ *                            https://captain-slow.dk/2014/03/09/3d-printing-timelapses/
  *  - PHOTOGRAPH_PIN        : Pulse a digital pin 16 times.
- *                            See https://web.archive.org/web/20250327153953/www.doc-diy.net/photo/rc-1_hacked/
+ *                            See https://www.doc-diy.net/photo/rc-1_hacked/
  *  - PHOTO_SWITCH_POSITION : Bump a physical switch with the X-carriage using a
  *                            configured position, delay, and retract length.
  *

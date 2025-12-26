@@ -23,7 +23,7 @@
 
 /**
  * Geeetech GT2560 Revision A+ board pin assignments
- * Schematic: https://wiki.geeetech.com/images/d/d3/Hardware_GT2560_RevA+.pdf
+ * Schematic: https://www.geeetech.com/wiki/images/d/d3/Hardware_GT2560_RevA%2B.pdf
  * ATmega2560
  */
 
