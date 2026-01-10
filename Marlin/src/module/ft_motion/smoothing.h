@@ -49,5 +49,15 @@ typedef struct Smoothing {
   // Smoothing causes a phase delay equal to smoothing_time. This delay is componensated for during axis synchronisation, which
   // is done by delaying all axes to match the laggiest one (i.e largest_delay_samples).
   void refresh_largest_delay_samples() { largest_delay_samples = _MAX(CARTES_LIST(X.delay_samples, Y.delay_samples, Z.delay_samples, E.delay_samples)); }
-  // Note: the delay equals smoothing_time iff the input signal frequency is lower than 1/smoothing_time, luckily for us, this holds in this case
+  // Note: The delay equals smoothing_time only if the input signal frequency is under 1/smoothing_time; which, luckily, holds in this case.
+  void reset() {
+    #define _CLEAR(A) ZERO(A.smoothing_pass);
+    LOGICAL_AXIS_MAP(_CLEAR);
+    #undef _CLEAR
+  }
+  void fill(const xyze_float_t pos) {
+    #define _FILL_SMO(A) for (uint32_t i = 0; i < FTM_SMOOTHING_ORDER; i++) A.smoothing_pass[i] = pos.A;
+    LOGICAL_AXIS_MAP(_FILL_SMO);
+    #undef _FILL_SMO
+  }
 } smoothing_t;

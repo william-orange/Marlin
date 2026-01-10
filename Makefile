@@ -160,7 +160,7 @@ format-lines:
 
 validate-lines:
 	@echo "Validating text formatting"
-	@npx prettier --check . --editorconfig --object-wrap preserve
+	@npx prettier --check . --editorconfig --object-wrap preserve --prose-wrap never
 
 BOARDS_FILE := Marlin/src/core/boards.h
 
