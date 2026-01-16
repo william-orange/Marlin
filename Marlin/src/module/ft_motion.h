@@ -352,6 +352,11 @@ class FTMotion {
     static xyze_float_t ratio;            // (ratio) Axis move ratio of block
     static float tau;                     // (s) Time since start of block
 
+    #if HAS_FTM_DIR_CHANGE_HOLD
+      static xyze_uint_t hold_frames;     // Briefly hold motion after direction changes to fix TMC2208 bug
+      static AxisBits last_traj_dir;      // Direction of the last trajectory point after shaping, smoothing, ...
+    #endif
+
     // Trajectory generators
     static TrapezoidalTrajectoryGenerator trapezoidalGenerator;
     #if ENABLED(FTM_POLYS)
@@ -419,7 +424,7 @@ class FTMotion {
     static xyze_float_t calc_traj_point(const float dist);
     static stepper_plan_t calc_stepper_plan(xyze_float_t delta);
     static bool plan_next_block();
-    static void ensure_float_precision() IF_DISABLED(HAS_EXTRUDERS, {});
+    static void ensure_extruder_float_precision() IF_DISABLED(HAS_EXTRUDERS, {});
 
 }; // class FTMotion
 
