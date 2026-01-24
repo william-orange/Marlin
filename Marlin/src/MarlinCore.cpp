@@ -269,6 +269,37 @@
   #include "feature/rs485.h"
 #endif
 
+#if ENABLED(SOFT_FEED_HOLD)
+  #include "feature/e_parser.h"
+#endif
+
+/**
+ * Spin in place here while keeping temperature processing alive
+ */
+void safe_delay(millis_t ms) {
+  while (ms > 50) {
+    ms -= 50;
+    delay(50);
+    thermalManager.task();
+  }
+  delay(ms);
+  thermalManager.task(); // This keeps us safe if too many small safe_delay() calls are made
+}
+
+// Singleton for Marlin global data and methods
+Marlin marlin;
+
+// Marlin static data
+#if ENABLED(CONFIGURABLE_MACHINE_NAME)
+  MString<64> Marlin::machine_name;
+#endif
+
+// Global state of the firmware
+MarlinState Marlin::state = MF_INITIALIZING;
+
+// For M109 and M190, this flag may be cleared (by M108) to exit the wait loop
+bool Marlin::wait_for_heatup = false;
+
 #if !HAS_MEDIA
   CardReader card; // Stub instance with "no media" methods
 #endif
@@ -505,8 +536,14 @@ inline void manage_inactivity(const bool no_stepper_sleep=false) {
     }
   #endif
 
-  #if ENABLED(FREEZE_FEATURE)
-    stepper.frozen = READ(FREEZE_PIN) == FREEZE_STATE;
+  // Handle the FREEZE button
+  #if ANY(FREEZE_FEATURE, SOFT_FEED_HOLD)
+    stepper.set_frozen_triggered(
+      TERN0(FREEZE_FEATURE, READ(FREEZE_PIN) == FREEZE_STATE)
+      #if ALL(SOFT_FEED_HOLD, REALTIME_REPORTING_COMMANDS)
+        || realtime_ramping_pause_flag
+      #endif
+    );
   #endif
 
   #if HAS_HOME
@@ -1209,7 +1246,7 @@ void setup() {
     #endif
   #endif
 
-  #if ENABLED(FREEZE_FEATURE)
+  #if ENABLED(FREEZE_FEATURE) && DISABLED(NO_FREEZE_PIN)
     SETUP_LOG("FREEZE_PIN");
     #if FREEZE_STATE
       SET_INPUT_PULLDOWN(FREEZE_PIN);
