@@ -385,11 +385,20 @@
 #endif
 #if DISABLED(NO_STANDARD_MOTION)
   #define HAS_STANDARD_MOTION 1
+#else
+  #undef LIN_ADVANCE
+  #undef SMOOTH_LIN_ADVANCE
+  #undef S_CURVE_ACCELERATION
+  #undef ADAPTIVE_STEP_SMOOTHING
+  #undef INPUT_SHAPING_X
+  #undef INPUT_SHAPING_Y
+  #undef INPUT_SHAPING_Z
 #endif
 
-// ZV Input shaping
-#if ANY(INPUT_SHAPING_X, INPUT_SHAPING_Y, INPUT_SHAPING_Z)
-  #define HAS_ZV_SHAPING 1
+// Disallowed with no shaping
+#if NONE(INPUT_SHAPING_X, INPUT_SHAPING_Y, INPUT_SHAPING_Z)
+  #undef SHAPING_MENU
+  #undef INPUT_SHAPING_E_SYNC
 #endif
 
 // Linear advance uses Jerk since E is an isolated axis
