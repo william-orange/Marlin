@@ -116,9 +116,7 @@ void gCfgItems_init() {
   gCfgItems.curFilesize       = 0;
   gCfgItems.finish_power_off  = false;
   gCfgItems.pause_reprint     = false;
-  gCfgItems.pausePosX         = -1;
-  gCfgItems.pausePosY         = -1;
-  gCfgItems.pausePosZ         = 5;
+  gCfgItems.pausePos.set(-1, -1, 5);
   gCfgItems.trammingPos[0].x  = X_MIN_POS + 30;
   gCfgItems.trammingPos[0].y  = Y_MIN_POS + 30;
   gCfgItems.trammingPos[1].x  = X_MAX_POS - 30;
@@ -649,7 +647,7 @@ char *creat_title_text() {
 
         card.openFileRead(cur_name);
         if (card.isFileOpen()) {
-          feedrate_percentage = 100;
+          motion.feedrate_percentage = 100;
           TERN_(HAS_EXTRUDERS, planner.set_flow(0, 100));
           E_TERN_(planner.set_flow(1, 100));
           card.startOrResumeFilePrinting();
